@@ -1,3 +1,6 @@
+# macOS writes these into any folder it browses
+.DS_Store
+
 __pycache__/
 *.py[cod]
 .venv/
