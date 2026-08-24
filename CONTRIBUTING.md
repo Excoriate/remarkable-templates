@@ -70,6 +70,26 @@ PPI. If you can confirm on hardware whether it stores landscape templates
 rotated, please say so in the pull request: that is currently the largest
 inferred claim in [docs/template-format.md](docs/template-format.md).
 
+## Repository settings
+
+`scripts/setup-github.sh` sets the GitHub side — remote, push, description,
+topics, secret scanning and push protection, Dependabot, a read-only default
+`GITHUB_TOKEN`, and branch protection on `main` requiring the `build` check.
+
+```bash
+scripts/setup-github.sh --dry-run     # print every call, change nothing
+scripts/setup-github.sh               # solo-maintainer protection
+scripts/setup-github.sh --strict      # admins included, one review required
+```
+
+It sets state rather than toggling it, so re-running is a no-op that confirms
+the current configuration, and it reads every setting back at the end.
+
+The default leaves admins exempt from branch protection. That is deliberate: a
+single maintainer cannot approve their own pull request, and locking the only
+person with access out of `main` is a worse failure than the one it prevents.
+`--strict` is the right setting the moment there is a second maintainer.
+
 ## What this project will not take
 
 Pull requests adding third-party template artwork. This repository ships
