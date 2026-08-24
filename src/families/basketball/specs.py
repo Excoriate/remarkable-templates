@@ -1,7 +1,8 @@
 """Basketball court geometry, taken from the governing rule books.
 
 Every dimension below is traceable. Each :class:`CourtSpec` carries a
-``sources`` mapping and a ``caveats`` list; ``docs/court-geometry.md`` is
+``sources`` mapping and a ``caveats`` list; the generated reference at
+``docs/families/basketball-court-geometry.md`` is
 generated from these fields, so the published documentation cannot drift away
 from the numbers actually used to draw the courts.
 

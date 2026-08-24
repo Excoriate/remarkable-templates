@@ -2,21 +2,22 @@
 #
 # Remove this repository's templates from a reMarkable tablet.
 #
-# Only entries filed under our own namespace directories are touched;
-# everything else in templates.json is preserved. Notebook pages that already
-# use one of these templates keep pointing at it, so if you reinstall later
-# under the same filenames the pages come back looking the way they did.
+# Only entries filed under our own set directories are touched; everything else
+# in templates.json is preserved. Notebook pages that already use one of these
+# templates keep pointing at it, so if you reinstall later under the same
+# filenames the pages come back looking the way they did.
 #
-# Usage:  install/uninstall.sh [--host HOST] [--legacy] [--purge] [--yes]
+# Usage:  install/uninstall.sh [--host HOST] [--only a,b] [--purge] [--yes]
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD_ROOT="${REPO}/templates"
 HOST="${RM_HOST:-10.11.99.1}"
 SSH_OPTS=(-o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new)
 DEVICE_TEMPLATES=/usr/share/remarkable/templates
 PERSIST_ROOT=/home/root/.local/share/remarkable/templates
-ROOTS=("${REPO}/templates")
-NAMESPACES=(basketball)
+
+ONLY=""
 PURGE=0
 ASSUME_YES=0
 
@@ -26,20 +27,36 @@ say() { printf '%s\n' "$*"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --host) HOST="$2"; shift 2 ;;
-    --legacy) ROOTS+=("${REPO}/templates-legacy"); NAMESPACES+=(legacy); shift ;;
+    --only) ONLY="$2"; shift 2 ;;
     --purge) PURGE=1; shift ;;
     --yes|-y) ASSUME_YES=1; shift ;;
-    -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "unknown argument: $1" ;;
   esac
 done
 
 rsh() { ssh "${SSH_OPTS[@]}" "root@${HOST}" "$@"; }
+wanted() {
+  [[ -z "$ONLY" ]] && return 0
+  [[ ",${ONLY}," == *",$1,"* ]]
+}
+
+NAMESPACES=()
+MANIFESTS=()
+for m in "${BUILD_ROOT}"/*/manifest.json; do
+  [[ -f "$m" ]] || continue
+  ns="$(basename "$(dirname "$m")")"
+  wanted "$ns" || continue
+  NAMESPACES+=("$ns")
+  MANIFESTS+=("$m")
+done
+[[ ${#NAMESPACES[@]} -gt 0 ]] || die "no built sets under ${BUILD_ROOT}; \
+nothing to identify. Build first, or pass --only with the set name."
 
 say "reMarkable template uninstall"
 say "  device        root@${HOST}"
 say "  removing      templates.json entries under: ${NAMESPACES[*]}"
-say "  removing      ${DEVICE_TEMPLATES}/{$(IFS=,; echo "${NAMESPACES[*]}")} (symlinks)"
+say "  removing      ${DEVICE_TEMPLATES}/{${NAMESPACES[*]}} (symlinks)"
 if [[ $PURGE -eq 1 ]]; then
   say "  --purge       also deletes the artwork under ${PERSIST_ROOT}"
 else
@@ -58,15 +75,8 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 rsh "cp ${DEVICE_TEMPLATES}/templates.json ${PERSIST_ROOT}/templates.json.${STAMP}.bak" 2>/dev/null || true
 scp "${SSH_OPTS[@]}" -q "root@${HOST}:${DEVICE_TEMPLATES}/templates.json" "${WORK}/device.json"
 
-FRAGMENTS=()
-for i in "${!NAMESPACES[@]}"; do
-  frag="${ROOTS[$i]}/templates.d/${NAMESPACES[$i]}.json"
-  [[ -f "$frag" ]] && FRAGMENTS+=("$frag")
-done
-[[ ${#FRAGMENTS[@]} -gt 0 ]] || die "no manifest fragments found; nothing to identify"
-
 python3 "${REPO}/install/lib/merge_templates_json.py" \
-  "${WORK}/device.json" "${FRAGMENTS[@]}" --remove-only -o "${WORK}/clean.json"
+  "${WORK}/device.json" "${MANIFESTS[@]}" --remove-only -o "${WORK}/clean.json"
 
 rsh "mount -o remount,rw /"
 scp "${SSH_OPTS[@]}" -q "${WORK}/clean.json" "root@${HOST}:${DEVICE_TEMPLATES}/templates.json"

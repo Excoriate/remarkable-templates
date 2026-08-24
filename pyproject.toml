@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "remarkable-templates"
 version = "1.0.0"
-description = "Rule-book-accurate basketball court templates for reMarkable tablets, and the toolkit that builds them"
+description = "A toolkit for building reMarkable paper templates, and the template families built with it"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -39,3 +39,6 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
 ignore = ["E731"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]

@@ -37,8 +37,8 @@ keeps everything within 25 ft of each baseline correct and quietly compresses
 the middle. That is invisible until you use the template to measure something.
 
 So: the redraw takes the whole-region rule, and the legacy set is still
-available for anyone who wants the extra scale — `just legacy` rebuilds it from
-your own copy of the files, at Paper Pro resolution.
+available for anyone who wants the extra scale — `just ingest <folder> legacy` rebuilds it
+from your own copy of the files, at Paper Pro resolution.
 
 That the two disagree is useful. The independently drawn courts were measured
 pixel by pixel while researching this, and their NFHS geometry agreed with the
@@ -93,4 +93,4 @@ geometry in its text layer, the NFHS one has no text layer at all. The positions
 drawn here come from standard court-marking practice, cross-checked against
 measurements from an independently drawn set, and are good to about an inch.
 Nothing else in the geometry depends on them, and
-[court-geometry.md](court-geometry.md) says so at the bottom of every table.
+[basketball-court-geometry.md](basketball-court-geometry.md) says so at the bottom of every table.

@@ -1,6 +1,6 @@
 # Court geometry
 
-*Generated from `src/courts/specs.py` by `just docs`. Do not edit by hand: change the spec and regenerate, so the documentation and the drawings cannot disagree.*
+*Generated from `src/families/basketball/specs.py` by `just docs`. Do not edit by hand: change the spec and regenerate, so the documentation and the drawings cannot disagree.*
 
 Every figure below is the one used to draw the templates. Rule books dimension a marking to a particular **edge** of the painted line, never to its centre, so the edge is recorded next to each value and resolved once, in `to_path()`.
 

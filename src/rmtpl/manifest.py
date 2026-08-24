@@ -13,20 +13,24 @@ Schema, as observed on shipping devices::
         ...
     ]}
 
-``filename`` carries no extension and may include a sub-directory, which is what
-makes a namespaced install directory a reliable marker for our own entries.
+``filename`` carries no extension and may include a sub-directory. That is what
+makes a namespace directory a reliable marker for one project's entries, and it
+is why every template this toolkit builds is filed under ``<namespace>/``.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-#: Sub-directory under the device template root that this tool owns outright.
-NAMESPACE = "basketball"
+from . import icons
+from .family import BuiltTemplate
+
+#: Written next to a built set's ``png/``, ``svg/`` and ``pdf/`` directories.
+MANIFEST_NAME = "manifest.json"
 
 
 @dataclass
@@ -35,7 +39,7 @@ class TemplateEntry:
     filename: str
     icon_code: str
     landscape: bool = False
-    categories: list[str] = field(default_factory=lambda: ["Basketball"])
+    categories: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -51,9 +55,38 @@ class TemplateEntry:
         return d
 
 
+def entries_for(namespace: str, built: Sequence[BuiltTemplate], *,
+                categories: Sequence[str], name_prefix: str = "",
+                blank_icons: bool = False) -> list[TemplateEntry]:
+    """Turn a family's output into manifest entries.
+
+    Icons cycle per orientation so a picker full of portrait templates does not
+    show the same glyph six times while the landscape ones go unused.
+    """
+    counter = {False: 0, True: 0}
+    out: list[TemplateEntry] = []
+    for item in built:
+        out.append(TemplateEntry(
+            name=f"{name_prefix}{item.display}",
+            filename=f"{namespace}/{item.stem}",
+            icon_code=icons.pick(counter[item.landscape], item.landscape,
+                                 blank_only=blank_icons),
+            landscape=item.landscape,
+            categories=list(categories),
+        ))
+        counter[item.landscape] += 1
+    return out
+
+
 def dumps(entries: Iterable[TemplateEntry]) -> str:
     payload = {"templates": [e.to_dict() for e in entries]}
     return json.dumps(payload, indent=2, ensure_ascii=True) + "\n"
+
+
+def write(path: Path, entries: Iterable[TemplateEntry]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(dumps(entries), encoding="utf-8")
+    return path
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -67,7 +100,7 @@ def load(path: Path) -> dict[str, Any]:
 
 
 def merge(device: dict[str, Any], ours: Iterable[TemplateEntry], *,
-          namespace: str = NAMESPACE) -> tuple[dict[str, Any], int, int]:
+          namespace: str) -> tuple[dict[str, Any], int, int]:
     """Return ``(merged, removed, added)``.
 
     Entries whose ``filename`` sits under ``namespace/`` are treated as ours and
@@ -85,8 +118,7 @@ def merge(device: dict[str, Any], ours: Iterable[TemplateEntry], *,
         if entry["name"] in seen:
             raise ValueError(
                 f"template name {entry['name']!r} already exists on the device "
-                "outside our namespace; rename it before installing"
-            )
+                "outside our namespace; rename it before installing")
         seen.add(entry["name"])
 
     merged = dict(device)

@@ -3,10 +3,12 @@ CC0 1.0 Universal — Public Domain Dedication
 
 This dedication covers the generated court templates in this repository:
 
-    templates/png/*.png
-    templates/svg/*.svg
-    templates/pdf/*.pdf
+    templates/<set>/png/*.png
+    templates/<set>/svg/*.svg
+    templates/<set>/pdf/*.pdf
     docs/images/*
+
+for every set generated from source in this repository (today: basketball).
 
 To the extent possible under law, Alex Torres Ruiz has waived all copyright and
 related or neighbouring rights to these files. They are dedicated to the public
@@ -24,8 +26,9 @@ distinction where it belongs and lets anyone build on them.
 This dedication does NOT cover:
 
   - The source code, which is MIT licensed. See LICENSE.
-  - Anything produced by `just legacy`, which is derived from third-party
-    artwork this repository neither ships nor licenses. See NOTICE.md.
-  - The rule books and court diagrams cited in docs/court-geometry.md, which
+  - Anything produced by `just ingest`, which is derived from artwork this
+    repository neither ships nor licenses. See NOTICE.md.
+  - The rule books and court diagrams cited in the generated geometry
+    references under docs/families/, which
     remain the property of their publishers. They are cited as sources of fact,
     and none of their text or artwork is reproduced here.

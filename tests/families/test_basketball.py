@@ -1,4 +1,4 @@
-"""Rule-book cross-checks.
+"""Rule-book cross-checks for the basketball family.
 
 These are the only tests that can catch a wrong dimension, and they work by
 playing independently published figures off against each other rather than by
@@ -11,8 +11,8 @@ import math
 
 import pytest
 
-from courts import specs
-from courts.specs import Edge, inch, m
+from families.basketball import specs
+from families.basketball.specs import Edge, inch, m
 
 FOOT_CODES = ("nba", "ncaa", "nfhs")
 
@@ -43,7 +43,8 @@ def test_nba_corner_three_is_three_feet_from_the_sideline():
 
 
 def test_fiba_corner_three_is_ninety_centimetres_from_the_sideline():
-    assert specs.FIBA.three_corner_from_sideline == pytest.approx(m(0.90), abs=m(0.002))
+    assert specs.FIBA.three_corner_from_sideline == pytest.approx(
+        m(0.90), abs=m(0.002))
 
 
 def test_nfhs_corner_segment_is_sixty_three_inches():
@@ -115,8 +116,17 @@ def test_every_spec_cites_its_sources():
 
 
 def test_edge_conventions_move_the_path_the_right_way():
-    from courts.geometry import to_path
+    from families.basketball.geometry import to_path
     w = inch(2)
     assert to_path(10.0, Edge.OUTER, w) == pytest.approx(10.0 - w / 2)
     assert to_path(10.0, Edge.INNER, w) == pytest.approx(10.0 + w / 2)
     assert to_path(10.0, Edge.CENTRE, w) == 10.0
+
+
+def test_generated_docs_stay_in_step_with_the_specs(tmp_path):
+    from families.basketball.docgen import write_geometry_doc
+    text = write_geometry_doc(tmp_path).read_text()
+    for key in specs.ORDER:
+        assert specs.get(key).label in text
+    assert "22'1.75\"" in text or "22'1.75" in text   # NCAA three-point radius
+    assert "no restricted arc" in text.lower() or "none" in text.lower()

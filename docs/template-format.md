@@ -91,7 +91,7 @@ falls back to the two "Blank" glyphs if a firmware's font surprises you.
 
 ### Categories
 
-`Basketball` is a category this project invents. Custom category names are
+A family's own label (`Basketball`) is used as the category by default. Custom category names are
 reported to work, creating their own tab. If yours does not appear, build with
 `--categories Creative` to file them under a stock tab instead.
 

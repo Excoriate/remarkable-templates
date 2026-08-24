@@ -13,22 +13,23 @@
 #      merged there, and written back, and the original is kept on the device
 #      before anything changes.
 #
-# Usage:  install/install.sh [--host HOST] [--svg] [--legacy] [--relink]
+# Every directory under templates/ that holds a manifest.json is one set, and
+# every set is installed unless --only names a subset. What will be installed is
+# printed before anything is touched.
+#
+# Usage:  install/install.sh [--host HOST] [--only a,b] [--svg] [--relink]
 #                            [--dry-run] [--yes]
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD_ROOT="${REPO}/templates"
 HOST="${RM_HOST:-10.11.99.1}"
 SSH_OPTS=(-o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new)
 
 DEVICE_TEMPLATES=/usr/share/remarkable/templates
 PERSIST_ROOT=/home/root/.local/share/remarkable/templates
 
-# A build root and the namespace it owns, kept as parallel arrays so a set can
-# be added without the script caring where it was built.
-ROOTS=("${REPO}/templates")
-NAMESPACES=(basketball)
-
+ONLY=""
 WITH_SVG=0
 RELINK_ONLY=0
 DRY_RUN=0
@@ -40,48 +41,59 @@ say() { printf '%s\n' "$*"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --host) HOST="$2"; shift 2 ;;
+    --only) ONLY="$2"; shift 2 ;;
     --svg) WITH_SVG=1; shift ;;
-    --legacy) ROOTS+=("${REPO}/templates-legacy"); NAMESPACES+=(legacy); shift ;;
     --relink) RELINK_ONLY=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     --yes|-y) ASSUME_YES=1; shift ;;
-    -h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "unknown argument: $1" ;;
   esac
 done
 
 rsh() { ssh "${SSH_OPTS[@]}" "root@${HOST}" "$@"; }
+wanted() {
+  [[ -z "$ONLY" ]] && return 0
+  [[ ",${ONLY}," == *",$1,"* ]]
+}
 
 # --------------------------------------------------------------------------- #
 # Work out exactly what will change, and say so before touching anything.
 # --------------------------------------------------------------------------- #
-FRAGMENTS=()
-STEMS=()      # "<index> <namespace>/<stem>", index into ROOTS
-for i in "${!NAMESPACES[@]}"; do
-  ns="${NAMESPACES[$i]}"
-  frag="${ROOTS[$i]}/templates.d/${ns}.json"
-  [[ -f "$frag" ]] || die "missing manifest fragment: ${frag}
-build it first:  just build          (court templates)
-                 just legacy <folder-of-pngs>   (the legacy set)"
-  FRAGMENTS+=("$frag")
+NAMESPACES=()
+MANIFESTS=()
+for m in "${BUILD_ROOT}"/*/manifest.json; do
+  [[ -f "$m" ]] || continue
+  ns="$(basename "$(dirname "$m")")"
+  wanted "$ns" || continue
+  NAMESPACES+=("$ns")
+  MANIFESTS+=("$m")
+done
+[[ ${#NAMESPACES[@]} -gt 0 ]] || die "nothing to install under ${BUILD_ROOT}.
+build first:  just build                       (every family)
+              just ingest <folder> <namespace> (your own PNGs)"
+
+STEMS=()   # "<namespace> <stem>"
+for m in "${MANIFESTS[@]}"; do
   while IFS= read -r name; do
-    STEMS+=("${i} ${name}")
+    STEMS+=("${name%%/*} ${name##*/}")
   done < <(python3 -c '
 import json, sys
 from pathlib import Path
 for t in json.loads(Path(sys.argv[1]).read_text())["templates"]:
-    print(t["filename"])' "$frag")
+    print(t["filename"])' "$m")
 done
-[[ ${#STEMS[@]} -gt 0 ]] || die "the manifest fragments list no templates"
+[[ ${#STEMS[@]} -gt 0 ]] || die "the manifests list no templates"
 
 say "reMarkable template install"
 say "  device            root@${HOST}"
-say "  templates         ${#STEMS[@]} across namespaces: ${NAMESPACES[*]}"
-say "  artwork goes to   ${PERSIST_ROOT}/<namespace>/   (survives firmware updates)"
-say "  symlinked into    ${DEVICE_TEMPLATES}/<namespace>"
+say "  sets              ${NAMESPACES[*]}"
+say "  templates         ${#STEMS[@]}"
+say "  artwork goes to   ${PERSIST_ROOT}/<set>/   (survives firmware updates)"
+say "  symlinked into    ${DEVICE_TEMPLATES}/<set>"
 say "  modified in place ${DEVICE_TEMPLATES}/templates.json"
 say "                    backed up on the device first; entries outside the"
-say "                    namespaces above are preserved byte for byte"
+say "                    sets above are preserved byte for byte"
 say "  then              systemctl restart xochitl"
 [[ $RELINK_ONLY -eq 1 ]] && say "  --relink          skipping the copy: re-link and re-register only"
 say ""
@@ -107,20 +119,19 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 if [[ $RELINK_ONLY -ne 1 ]]; then
   for ns in "${NAMESPACES[@]}"; do rsh "mkdir -p ${PERSIST_ROOT}/${ns}"; done
   for row in "${STEMS[@]}"; do
-    idx="${row%% *}"; name="${row#* }"
-    ns="${name%%/*}"; stem="${name##*/}"
-    src="${ROOTS[$idx]}/png/${stem}.png"
+    ns="${row%% *}"; stem="${row#* }"
+    src="${BUILD_ROOT}/${ns}/png/${stem}.png"
     [[ -f "$src" ]] || die "built template missing: ${src}"
     scp "${SSH_OPTS[@]}" -q "$src" "root@${HOST}:${PERSIST_ROOT}/${ns}/${stem}.png"
-    if [[ $WITH_SVG -eq 1 && -f "${ROOTS[$idx]}/svg/${stem}.svg" ]]; then
-      scp "${SSH_OPTS[@]}" -q "${ROOTS[$idx]}/svg/${stem}.svg" \
+    if [[ $WITH_SVG -eq 1 && -f "${BUILD_ROOT}/${ns}/svg/${stem}.svg" ]]; then
+      scp "${SSH_OPTS[@]}" -q "${BUILD_ROOT}/${ns}/svg/${stem}.svg" \
         "root@${HOST}:${PERSIST_ROOT}/${ns}/${stem}.svg"
     fi
   done
   say "copied ${#STEMS[@]} template file(s)"
 fi
 
-# 2. make the system partition writable and link the namespaces in
+# 2. make the system partition writable and link the sets in
 rsh "mount -o remount,rw /"
 for ns in "${NAMESPACES[@]}"; do
   rsh "rm -rf ${DEVICE_TEMPLATES}/${ns} && ln -s ${PERSIST_ROOT}/${ns} ${DEVICE_TEMPLATES}/${ns}"
@@ -136,19 +147,19 @@ scp "${SSH_OPTS[@]}" -q "root@${HOST}:${DEVICE_TEMPLATES}/templates.json" "${WOR
 BEFORE=$(python3 -c 'import json,sys;print(len(json.load(open(sys.argv[1]))["templates"]))' "${WORK}/device.json")
 
 python3 "${REPO}/install/lib/merge_templates_json.py" \
-  "${WORK}/device.json" "${FRAGMENTS[@]}" -o "${WORK}/merged.json"
+  "${WORK}/device.json" "${MANIFESTS[@]}" -o "${WORK}/merged.json"
 scp "${SSH_OPTS[@]}" -q "${WORK}/merged.json" "root@${HOST}:${DEVICE_TEMPLATES}/templates.json"
 say "backed up templates.json to ${PERSIST_ROOT}/templates.json.${STAMP}.bak"
 
 # 4. verify against the device's own copy, not the file we just uploaded
 scp "${SSH_OPTS[@]}" -q "root@${HOST}:${DEVICE_TEMPLATES}/templates.json" "${WORK}/verify.json"
 python3 "${REPO}/install/lib/verify_install.py" "${WORK}/verify.json" "${BEFORE}" \
-  "${FRAGMENTS[@]}" || die "verification failed. The device's previous
+  "${MANIFESTS[@]}" || die "verification failed. The device's previous
 templates.json is at ${PERSIST_ROOT}/templates.json.${STAMP}.bak and the
 pristine one at ${PERSIST_ROOT}/templates.json.orig"
 
 # 5. every listed template must resolve to a file readable through the symlink
-NAMES=$(printf '%s\n' "${STEMS[@]}" | cut -d' ' -f2- | tr '\n' ' ')
+NAMES=$(printf '%s\n' "${STEMS[@]}" | tr ' ' '/' | tr '\n' ' ')
 MISSING=$(rsh "cd ${DEVICE_TEMPLATES} && for f in ${NAMES}; do test -r \"\$f.png\" || test -r \"\$f.svg\" || echo \"\$f\"; done")
 [[ -z "$MISSING" ]] || die "listed but not readable on the device:
 ${MISSING}"
@@ -157,4 +168,4 @@ say "verified: every listed template resolves to a readable file"
 rsh "systemctl restart xochitl"
 say ""
 say "done. The tablet's UI restarts. Open a notebook, tap the page menu,"
-say "choose a template, and look under the '${NAMESPACES[0]^}' tab."
+say "choose a template, and look for the new tab."

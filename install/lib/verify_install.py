@@ -13,12 +13,12 @@ from pathlib import Path
 
 
 def main() -> int:
-    device_file, before_s, *fragments = sys.argv[1:]
+    device_file, before_s, *manifests = sys.argv[1:]
     data = json.loads(Path(device_file).read_text(encoding="utf-8"))
     before = int(before_s)
 
     wanted: set[str] = set()
-    for frag in fragments:
+    for frag in manifests:
         for t in json.loads(Path(frag).read_text(encoding="utf-8"))["templates"]:
             wanted.add(t["filename"])
 

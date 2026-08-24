@@ -1,4 +1,4 @@
-"""Generate docs/court-geometry.md from the specs themselves.
+"""Generate the basketball geometry reference from the specs themselves.
 
 The documentation is generated rather than written so it cannot drift away from
 the numbers the courts are actually drawn with. If you change a dimension, run
@@ -86,9 +86,9 @@ def render() -> str:
     out: list[str] = [
         "# Court geometry",
         "",
-        "*Generated from `src/courts/specs.py` by `just docs`. Do not edit by "
-        "hand: change the spec and regenerate, so the documentation and the "
-        "drawings cannot disagree.*",
+        "*Generated from `src/families/basketball/specs.py` by `just docs`. "
+        "Do not edit by hand: change the spec and regenerate, so the "
+        "documentation and the drawings cannot disagree.*",
         "",
         "Every figure below is the one used to draw the templates. Rule books "
         "dimension a marking to a particular **edge** of the painted line, "
@@ -152,7 +152,8 @@ def render() -> str:
 
 
 def write_geometry_doc(docs_dir: Path) -> Path:
-    docs_dir.mkdir(parents=True, exist_ok=True)
-    path = docs_dir / "court-geometry.md"
+    target = docs_dir / "families"
+    target.mkdir(parents=True, exist_ok=True)
+    path = target / "basketball-court-geometry.md"
     path.write_text(render(), encoding="utf-8")
     return path

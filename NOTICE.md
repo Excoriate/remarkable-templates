@@ -1,29 +1,35 @@
 # Attribution and third-party material
 
-## The court drawings
+## The template artwork
 
-The templates in `templates/` were drawn for this repository from published
-rule-book dimensions. They are not traced from, derived from, or a modification
-of anyone else's artwork. Every figure used is listed with its source in
-[docs/court-geometry.md](docs/court-geometry.md). They are released under CC0
-(see [LICENSE-ART](LICENSE-ART)).
+Everything under `templates/` that this repository commits was generated from
+source in this repository. It is not traced from, derived from, or a
+modification of anyone else's artwork.
 
-## The legacy set
+For the basketball family, every figure used is listed with its source in
+[docs/families/basketball-court-geometry.md](docs/families/basketball-court-geometry.md).
+The generated templates are released under CC0 — see [LICENSE-ART](LICENSE-ART).
 
-This project started from a set of reMarkable 2 basketball court templates by
+## The reMarkable 2 court templates this project started from
+
+This project began with a set of reMarkable 2 basketball court templates by
 **Kyle Gentry**, whose name is embedded in the artwork itself. They are good
-drawings, and measuring them was genuinely useful: their high-school geometry
+drawings, and measuring them was useful: their high-school geometry
 independently agreed with the NFHS rule book on every dimension checked, which
 is worth more than one source alone.
 
 **Those files are not redistributed here.** No copy of them, and no derivative
-of them, is committed to this repository.
+of them, is committed to this repository. What is here is the pipeline. Point it
+at your own copy:
 
-What is here is the *recipe*. `just legacy <your-folder>` runs the
-generic ingest pipeline over your own copy, upscaling them to Paper Pro
-resolution and writing the result to `templates-legacy/`, which is git-ignored.
-If you did not obtain those PNGs yourself, this repository will not get them for
-you.
+```bash
+just ingest "~/path/to/those/pngs" legacy "Legacy " rM-
+just install --only legacy
+```
+
+That upscales them to the target device's resolution and writes to
+`templates/legacy/`, which is git-ignored. If you did not obtain those PNGs
+yourself, this repository will not get them for you.
 
 If you are Kyle Gentry and you would like the set included here under a licence
 of your choosing, or you would like this note worded differently, please open an

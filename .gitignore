@@ -7,6 +7,7 @@ __pycache__/
 build/
 dist/
 
-# The legacy set is built from artwork this repository does not own and does
-# not redistribute. Run `just legacy PNG_DIR=...` against your own copy.
-templates-legacy/
+# Sets built by `just ingest` from artwork this repository does not own and
+# does not redistribute. Point it at your own copy; the output stays local.
+templates/imported/
+templates/legacy/

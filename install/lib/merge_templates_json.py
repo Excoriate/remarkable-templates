@@ -6,9 +6,9 @@ Python interpreter, and the merge is the one step where a mistake costs someone
 their stock templates. Reading the device's file, editing it here and writing it
 back keeps the risky part on a machine with real tooling.
 
-    merge_templates_json.py DEVICE_JSON FRAGMENT [FRAGMENT ...] -o OUT
+    merge_templates_json.py DEVICE_JSON MANIFEST [MANIFEST ...] -o OUT
 
-Entries already filed under the fragment's namespace directory are replaced, so
+Entries already filed under a manifest's namespace directory are replaced, so
 running an install twice is the same as running it once. Everything else in the
 device's file is preserved, in order.
 """
@@ -29,7 +29,7 @@ from rmtpl import manifest  # noqa: E402
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("device_json", type=Path)
-    ap.add_argument("fragments", type=Path, nargs="+")
+    ap.add_argument("manifests", type=Path, nargs="+")
     ap.add_argument("-o", "--out", type=Path, required=True)
     ap.add_argument("--remove-only", action="store_true",
                     help="strip our entries and add nothing back")
@@ -40,7 +40,7 @@ def main() -> int:
 
     entries: list[manifest.TemplateEntry] = []
     namespaces: set[str] = set()
-    for frag in args.fragments:
+    for frag in args.manifests:
         data = json.loads(frag.read_text(encoding="utf-8"))
         problems = manifest.validate(data["templates"])
         if problems:
