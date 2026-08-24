@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="509.3450pt" height="679.1266pt" viewBox="0 0 1620 2160">
+  <title>NCAA basketball court (full court)</title>
+  <rect x="0" y="0" width="1620" height="2160" fill="#ffffff"/>
+  <path d="M 247.618 27.862 L 1372.382 27.862" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 249.481 26.000 L 249.481 2132.138" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 1370.519 26.000 L 1370.519 2132.138" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 247.618 2132.138 L 1372.382 2132.138" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 249.481 1080.000 L 1370.519 1080.000" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <circle cx="810.000" cy="1080.000" r="132.216" stroke="#4a4a4a" stroke-width="3.724" fill="none"/>
+  <path d="M 251.343 655.420 L 318.382 655.420" stroke="#8a8a8a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 1368.657 655.420 L 1301.618 655.420" stroke="#8a8a8a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 251.343 1504.580 L 318.382 1504.580" stroke="#8a8a8a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 1368.657 1504.580 L 1301.618 1504.580" stroke="#8a8a8a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 677.784 29.724 L 677.784 452.442 L 942.216 452.442 L 942.216 29.724" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <path d="M 942.216 452.442 A 132.216 132.216 0 0 1 677.784 452.442" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 677.784 452.442 A 132.216 132.216 0 0 1 942.216 452.442" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt" stroke-dasharray="29.407 25.731"/>
+  <rect x="661.025" y="186.148" width="14.898" height="22.346" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="186.148" width="14.898" height="22.346" fill="#8a8a8a" stroke="none"/>
+  <rect x="661.025" y="275.534" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="275.534" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="661.025" y="346.297" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="346.297" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="661.025" y="417.060" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="417.060" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <path d="M 327.925 29.724 L 327.925 250.328" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 1292.075 29.724 L 1292.075 250.328" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 1292.075 250.328 A 493.015 493.015 0 0 1 327.925 250.328" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 901.247 147.042 A 91.247 91.247 0 0 1 718.753 147.042" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 718.753 147.042 L 718.753 119.110" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 901.247 147.042 L 901.247 119.110" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 742.961 119.110 L 877.039 119.110" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 810.000 119.110 L 810.000 130.283" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <circle cx="810.000" cy="147.042" r="16.760" stroke="#4a4a4a" stroke-width="3.724" fill="none"/>
+  <path d="M 677.784 2130.276 L 677.784 1707.558 L 942.216 1707.558 L 942.216 2130.276" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <path d="M 942.216 1707.558 A 132.216 132.216 0 0 0 677.784 1707.558" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 677.784 1707.558 A 132.216 132.216 0 0 0 942.216 1707.558" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt" stroke-dasharray="29.407 25.731"/>
+  <rect x="661.025" y="1951.505" width="14.898" height="22.346" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="1951.505" width="14.898" height="22.346" fill="#8a8a8a" stroke="none"/>
+  <rect x="661.025" y="1880.742" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="1880.742" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="661.025" y="1809.979" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="1809.979" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="661.025" y="1739.216" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <rect x="944.078" y="1739.216" width="14.898" height="3.724" fill="#8a8a8a" stroke="none"/>
+  <path d="M 327.925 2130.276 L 327.925 1909.672" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 1292.075 2130.276 L 1292.075 1909.672" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 1292.075 1909.672 A 493.015 493.015 0 0 0 327.925 1909.672" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 901.247 2012.958 A 91.247 91.247 0 0 0 718.753 2012.958" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 718.753 2012.958 L 718.753 2040.890" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 901.247 2012.958 L 901.247 2040.890" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <path d="M 742.961 2040.890 L 877.039 2040.890" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 810.000 2040.890 L 810.000 2029.717" stroke="#4a4a4a" stroke-width="3.724" fill="none" stroke-linecap="butt"/>
+  <circle cx="810.000" cy="2012.958" r="16.760" stroke="#4a4a4a" stroke-width="3.724" fill="none"/>
+</svg>

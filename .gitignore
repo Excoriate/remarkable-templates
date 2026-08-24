@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# The legacy set is built from artwork this repository does not own and does
+# not redistribute. Run `just legacy PNG_DIR=...` against your own copy.
+templates-legacy/

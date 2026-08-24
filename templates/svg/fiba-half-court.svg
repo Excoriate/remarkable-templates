@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="679.1266pt" height="509.3450pt" viewBox="0 0 2160 1620">
+  <title>FIBA basketball court (half court)</title>
+  <rect x="0" y="0" width="2160" height="1620" fill="#ffffff"/>
+  <path d="M 238.906 28.785 L 1921.094 28.785" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 241.691 26.000 L 241.691 1591.215" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1918.309 26.000 L 1918.309 1591.215" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 241.691 1591.215 L 1918.309 1591.215" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 882.259 1591.215 A 197.741 197.741 0 0 1 1277.741 1591.215" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 244.476 959.002 L 227.766 959.002" stroke="#8a8a8a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1915.524 959.002 L 1932.234 959.002" stroke="#8a8a8a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 809.847 31.570 L 809.847 674.924 L 1350.153 674.924 L 1350.153 31.570" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <path d="M 1277.741 674.924 A 197.741 197.741 0 0 1 882.259 674.924" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 882.259 674.924 A 197.741 197.741 0 0 1 1277.741 674.924" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt" stroke-dasharray="43.980 38.483"/>
+  <rect x="795.922" y="226.526" width="11.140" height="5.570" fill="#8a8a8a" stroke="none"/>
+  <rect x="1352.938" y="226.526" width="11.140" height="5.570" fill="#8a8a8a" stroke="none"/>
+  <rect x="795.922" y="321.218" width="11.140" height="44.561" fill="#8a8a8a" stroke="none"/>
+  <rect x="1352.938" y="321.218" width="11.140" height="44.561" fill="#8a8a8a" stroke="none"/>
+  <rect x="795.922" y="460.472" width="11.140" height="5.570" fill="#8a8a8a" stroke="none"/>
+  <rect x="1352.938" y="460.472" width="11.140" height="5.570" fill="#8a8a8a" stroke="none"/>
+  <rect x="795.922" y="555.165" width="11.140" height="5.570" fill="#8a8a8a" stroke="none"/>
+  <rect x="1352.938" y="555.165" width="11.140" height="5.570" fill="#8a8a8a" stroke="none"/>
+  <path d="M 347.524 31.570 L 347.524 364.381" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1812.476 31.570 L 1812.476 364.381" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1812.476 364.381 A 749.187 749.187 0 0 1 347.524 364.381" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1222.039 207.030 A 142.039 142.039 0 0 1 937.961 207.030" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 937.961 207.030 L 937.961 165.254" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1222.039 207.030 L 1222.039 165.254" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 979.737 165.254 L 1180.263 165.254" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1080.000 165.254 L 1080.000 181.686" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <circle cx="1080.000" cy="207.030" r="25.344" stroke="#4a4a4a" stroke-width="4.200" fill="none"/>
+</svg>

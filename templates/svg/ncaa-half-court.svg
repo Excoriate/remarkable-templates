@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="679.1266pt" height="509.3450pt" viewBox="0 0 2160 1620">
+  <title>NCAA basketball court (half court)</title>
+  <rect x="0" y="0" width="2160" height="1620" fill="#ffffff"/>
+  <path d="M 244.840 28.765 L 1915.160 28.765" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 247.605 26.000 L 247.605 1591.235" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1912.395 26.000 L 1912.395 1591.235" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 247.605 1591.235 L 1912.395 1591.235" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 883.654 1591.235 A 196.346 196.346 0 0 1 1276.346 1591.235" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 250.370 960.716 L 349.926 960.716" stroke="#8a8a8a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1909.630 960.716 L 1810.074 960.716" stroke="#8a8a8a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 883.654 31.531 L 883.654 659.284 L 1276.346 659.284 L 1276.346 31.531" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <path d="M 1276.346 659.284 A 196.346 196.346 0 0 1 883.654 659.284" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 883.654 659.284 A 196.346 196.346 0 0 1 1276.346 659.284" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt" stroke-dasharray="43.670 38.211"/>
+  <rect x="858.765" y="263.827" width="22.123" height="33.185" fill="#8a8a8a" stroke="none"/>
+  <rect x="1279.111" y="263.827" width="22.123" height="33.185" fill="#8a8a8a" stroke="none"/>
+  <rect x="858.765" y="396.568" width="22.123" height="5.531" fill="#8a8a8a" stroke="none"/>
+  <rect x="1279.111" y="396.568" width="22.123" height="5.531" fill="#8a8a8a" stroke="none"/>
+  <rect x="858.765" y="501.654" width="22.123" height="5.531" fill="#8a8a8a" stroke="none"/>
+  <rect x="1279.111" y="501.654" width="22.123" height="5.531" fill="#8a8a8a" stroke="none"/>
+  <rect x="858.765" y="606.741" width="22.123" height="5.531" fill="#8a8a8a" stroke="none"/>
+  <rect x="1279.111" y="606.741" width="22.123" height="5.531" fill="#8a8a8a" stroke="none"/>
+  <path d="M 364.099 31.531 L 364.099 359.136" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1795.901 31.531 L 1795.901 359.136" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1795.901 359.136 A 732.148 732.148 0 0 1 364.099 359.136" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1215.506 205.753 A 135.506 135.506 0 0 1 944.494 205.753" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 944.494 205.753 L 944.494 164.272" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1215.506 205.753 L 1215.506 164.272" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 980.444 164.272 L 1179.556 164.272" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1080.000 164.272 L 1080.000 180.864" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <circle cx="1080.000" cy="205.753" r="24.889" stroke="#4a4a4a" stroke-width="4.200" fill="none"/>
+</svg>

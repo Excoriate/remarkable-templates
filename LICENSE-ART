@@ -1,0 +1,31 @@
+CC0 1.0 Universal — Public Domain Dedication
+============================================
+
+This dedication covers the generated court templates in this repository:
+
+    templates/png/*.png
+    templates/svg/*.svg
+    templates/pdf/*.pdf
+    docs/images/*
+
+To the extent possible under law, Alex Torres Ruiz has waived all copyright and
+related or neighbouring rights to these files. They are dedicated to the public
+domain worldwide. You may copy, modify, distribute and use them, including for
+commercial purposes, without asking and without attribution.
+
+Full legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Why CC0 rather than a permissive licence: the geometry these drawings depict is
+a published fact — a basketball court is 94 feet long because a rule book says
+so, and nobody owns that. The drawings are an original rendering of those facts,
+authored for this repository. Putting them in the public domain keeps the
+distinction where it belongs and lets anyone build on them.
+
+This dedication does NOT cover:
+
+  - The source code, which is MIT licensed. See LICENSE.
+  - Anything produced by `just legacy`, which is derived from third-party
+    artwork this repository neither ships nor licenses. See NOTICE.md.
+  - The rule books and court diagrams cited in docs/court-geometry.md, which
+    remain the property of their publishers. They are cited as sources of fact,
+    and none of their text or artwork is reproduced here.

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="679.1266pt" height="509.3450pt" viewBox="0 0 2160 1620">
+  <title>High school basketball court (half court)</title>
+  <rect x="0" y="0" width="2160" height="1620" fill="#ffffff"/>
+  <path d="M 146.004 29.093 L 2013.996 29.093" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 149.097 26.000 L 149.097 1590.907" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 2010.903 26.000 L 2010.903 1590.907" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 149.097 1590.907 L 2010.903 1590.907" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 860.418 1590.907 A 219.582 219.582 0 0 1 1299.582 1590.907" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 860.418 32.185 L 860.418 734.229 L 1299.582 734.229 L 1299.582 32.185" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <path d="M 1299.582 734.229 A 219.582 219.582 0 0 1 860.418 734.229" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 860.418 734.229 A 219.582 219.582 0 0 1 1299.582 734.229" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt" stroke-dasharray="48.838 42.733"/>
+  <rect x="832.584" y="291.972" width="24.742" height="37.112" fill="#8a8a8a" stroke="none"/>
+  <rect x="1302.675" y="291.972" width="24.742" height="37.112" fill="#8a8a8a" stroke="none"/>
+  <rect x="832.584" y="440.422" width="24.742" height="6.185" fill="#8a8a8a" stroke="none"/>
+  <rect x="1302.675" y="440.422" width="24.742" height="6.185" fill="#8a8a8a" stroke="none"/>
+  <rect x="832.584" y="557.945" width="24.742" height="6.185" fill="#8a8a8a" stroke="none"/>
+  <rect x="1302.675" y="557.945" width="24.742" height="6.185" fill="#8a8a8a" stroke="none"/>
+  <rect x="832.584" y="675.467" width="24.742" height="6.185" fill="#8a8a8a" stroke="none"/>
+  <rect x="1302.675" y="675.467" width="24.742" height="6.185" fill="#8a8a8a" stroke="none"/>
+  <path d="M 350.122 32.185 L 350.122 227.026" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1809.878 32.185 L 1809.878 227.026" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1809.878 227.026 A 729.878 729.878 0 0 1 350.122 227.026" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 968.663 180.635 L 1191.337 180.635" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <path d="M 1080.000 180.635 L 1080.000 199.191" stroke="#4a4a4a" stroke-width="4.200" fill="none" stroke-linecap="butt"/>
+  <circle cx="1080.000" cy="227.026" r="27.834" stroke="#4a4a4a" stroke-width="4.200" fill="none"/>
+</svg>

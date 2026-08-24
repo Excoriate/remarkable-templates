@@ -1,0 +1,72 @@
+{
+  "templates": [
+    {
+      "name": "NBA full court",
+      "filename": "basketball/nba-full-court",
+      "iconCode": "\ue9fe",
+      "categories": [
+        "Basketball"
+      ]
+    },
+    {
+      "name": "NBA half court",
+      "filename": "basketball/nba-half-court",
+      "iconCode": "\ue9cc",
+      "landscape": true,
+      "categories": [
+        "Basketball"
+      ]
+    },
+    {
+      "name": "NCAA full court",
+      "filename": "basketball/ncaa-full-court",
+      "iconCode": "\ue9d6",
+      "categories": [
+        "Basketball"
+      ]
+    },
+    {
+      "name": "NCAA half court",
+      "filename": "basketball/ncaa-half-court",
+      "iconCode": "\ue9cd",
+      "landscape": true,
+      "categories": [
+        "Basketball"
+      ]
+    },
+    {
+      "name": "FIBA full court",
+      "filename": "basketball/fiba-full-court",
+      "iconCode": "\ue9d4",
+      "categories": [
+        "Basketball"
+      ]
+    },
+    {
+      "name": "FIBA half court",
+      "filename": "basketball/fiba-half-court",
+      "iconCode": "\ue9c8",
+      "landscape": true,
+      "categories": [
+        "Basketball"
+      ]
+    },
+    {
+      "name": "High school full court",
+      "filename": "basketball/nfhs-full-court",
+      "iconCode": "\ue9fe",
+      "categories": [
+        "Basketball"
+      ]
+    },
+    {
+      "name": "High school half court",
+      "filename": "basketball/nfhs-half-court",
+      "iconCode": "\ue9cc",
+      "landscape": true,
+      "categories": [
+        "Basketball"
+      ]
+    }
+  ]
+}

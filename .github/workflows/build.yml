@@ -1,0 +1,65 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: System libraries for cairo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2 shellcheck
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Lint
+        run: |
+          ruff check src tests tools install/lib
+          shellcheck -S warning install/*.sh
+
+      - name: Tests
+        run: pytest -q
+
+      # The committed templates must be exactly what the current source
+      # produces. If a spec changes and nobody re-ran `just all`, the
+      # repository is shipping artwork that no longer matches its own
+      # documentation, and this step says so.
+      - name: Rebuild from source and verify
+        run: |
+          python -m rmtpl courts --clean
+          python -m rmtpl docs
+          python -m rmtpl bundle
+          python tools/contact_sheet.py templates/png docs/images/contact-sheet.png
+          python -m rmtpl doctor
+
+      - name: Committed output is up to date
+        run: |
+          if ! git diff --quiet -- templates docs; then
+            echo "::error::templates/ or docs/ are stale. Run 'just all' and commit."
+            git --no-pager diff --stat -- templates docs
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: templates
+          path: |
+            templates/png
+            templates/svg
+            templates/pdf
+            templates/templates.d
