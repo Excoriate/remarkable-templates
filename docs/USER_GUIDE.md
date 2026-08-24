@@ -292,10 +292,10 @@ A set built from a subset of a family's variants is labelled as such and does
 not fail; pass `--allow-partial` to `python -m rmtpl doctor` to skip the
 completeness check entirely.
 
-Output ends with a count:
+Output ends with a count, which grows as families and templates are added:
 
 ```
-all 247 checks passed
+all 251 checks passed
 ```
 
 ## Every recipe
