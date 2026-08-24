@@ -201,7 +201,16 @@ generates the manifest:
 Sources that do not share the screen's 3:4 aspect ratio are letterboxed onto
 white and the build says so. `FIT=cover` crops instead; `FIT=stretch` distorts.
 `STRIP` drops a leading prefix from each file stem before naming — `rM-` turns
-`rM-nba-portrait.png` into "NBA portrait".
+`rM-nba-portrait.png` into "Nba portrait", and
+`--acronyms nba,ncaa,fiba` makes that "NBA portrait".
+
+File names become stems, so they are reduced to lower-case letters, digits and
+hyphens. A name that transliterates to nothing — one written entirely in a
+non-Latin script — gets a short digest instead of a shared placeholder, and two
+names that would reduce to the same stem are numbered apart. Both cases are
+reported in the build log with a `-> stem` note. Without that, one source
+silently overwrites another and the manifest points two picker entries at one
+image.
 
 A namespace that collides with a built-in family is refused, so an ingest can
 never quietly overwrite a family's output.
@@ -221,12 +230,12 @@ built them. Verification checks every set against the device you name, so a set
 left over from another device fails and says which one it was built for:
 
 ```
-square.png: canvas size: got (1620, 2160), want (1404, 1872)
-  — this file is sized for reMarkable Paper Pro. Rebuild it for the device
-    you are checking against.
+[FAIL] square.png: canvas size   got (1620, 2160), want (1404, 1872) — this file is sized for reMarkable Paper Pro. Rebuild it for the device you are checking against.
 ```
 
-`just clean` then a rebuild clears it.
+Each set also records the device it was built for, so the mismatch is reported
+against the record rather than guessed from a raster size. `just clean` then a
+rebuild clears it.
 
 ## Styling
 
@@ -245,6 +254,14 @@ python -m rmtpl build --ink '#000000' --line-scale 1.2 --margin 40
 | `--margin` | blank border in device pixels |
 | `--blank-icons` | use only the two stock "Blank" picker glyphs |
 | `--categories` | template-picker tabs, comma separated |
+| `--set KEY=VALUE` | a family-specific setting; repeatable |
+| `--variants` | build a subset of one family's variants |
+
+`just clean` removes build output. It does the deletion inside the toolkit
+rather than with a shell glob, so only the `png/`, `svg/` and `pdf/`
+directories of a directory that already holds a `manifest.json` are removed —
+which matters because `just` interpolates paths unquoted and a checkout under a
+path with a space would otherwise make `rm -rf` start in the wrong place.
 
 ## Verification
 
@@ -262,15 +279,23 @@ Three kinds, deliberately kept apart:
 - **Contract checks** confirm each file is what a tablet accepts: exact canvas
   size, opaque 8-bit raster, PDF pages the size of the panel, a manifest that
   parses and points at files that exist.
-- **Render checks** re-measure the finished PNGs and report in feet, deriving
-  scale from the image itself. They share no code with the drawing path, and a
-  test injects a three-inch error into the edge conversion to prove they fail
-  when they should.
+- **Render checks** re-measure the finished PNGs. Scale is derived from the
+  image so the results can be reported in feet — which means those comparisons
+  verify *ratios*, and a court drawn uniformly small would be internally
+  perfect. A separate check recomputes the expected scale from the published
+  dimensions and the recorded page margin, in arithmetic written in the
+  checker, and that is what catches it. They share no code with the drawing
+  path. Three tests inject a defect — a three-inch edge error, a wrong scale, a
+  template that was never built — and assert the checker fails.
+
+A set built from a subset of a family's variants is labelled as such and does
+not fail; pass `--allow-partial` to `python -m rmtpl doctor` to skip the
+completeness check entirely.
 
 Output ends with a count:
 
 ```
-all 224 checks passed
+all 247 checks passed
 ```
 
 ## Every recipe
@@ -293,6 +318,7 @@ all 224 checks passed
 | `just relink` | repair an install after a firmware update |
 | `just uninstall [ARGS]` | remove from a tablet |
 | `just clean` | remove build output and caches |
+| `python -m rmtpl clean` | the deletion `just clean` performs, on its own |
 
 Environment: `RM_DEVICE` (default `rmpp`) and `RM_HOST` (default `10.11.99.1`).
 

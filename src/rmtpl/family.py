@@ -7,7 +7,7 @@ reads, the install path. A family owns only what is true of its subject: what
 to draw, what the dimensions mean, and how to tell whether a drawing came out
 right.
 
-Adding a family means adding one package under ``src/families/`` that exposes a
+Adding a family means adding one package under ``src/rmtpl/families/`` that exposes a
 module-level ``FAMILY``. Nothing else in the repository needs to change: the
 build, the manifest, the documentation and the checks all iterate over whatever
 the registry finds.
@@ -51,7 +51,9 @@ class BuildOptions:
     want_pdf: bool = True
     #: Subset of the family's own variants to build; empty means all of them.
     variants: tuple[str, ...] = ()
-    #: Anything else a family understands, passed through from ``--set k=v``.
+    #: Family-specific settings, passed through from ``--set key=value``. The
+    #: toolkit never interprets these; a family reads the keys it understands
+    #: and should say so in its docstring.
     extra: dict[str, str] = field(default_factory=dict)
 
 
@@ -73,6 +75,18 @@ class TemplateFamily(ABC):
     @property
     def variants(self) -> tuple[str, ...]:
         """Names a caller may pass in ``BuildOptions.variants``."""
+        return ()
+
+    def expected_stems(self, options: BuildOptions) -> tuple[str, ...]:
+        """Every file stem a complete build of ``options`` should produce.
+
+        Declaring this is what lets verification notice a template that is
+        *absent*. A checker that only inspects the files it finds will happily
+        pass a set with half of it missing, because there is nothing to compare
+        the manifest against.
+
+        Return an empty tuple if a family genuinely cannot know in advance.
+        """
         return ()
 
     @abstractmethod

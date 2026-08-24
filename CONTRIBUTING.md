@@ -1,16 +1,23 @@
 # Contributing
 
 `just setup` once, then `just all` before every commit — it builds, regenerates
-the documentation, verifies and tests. CI runs the same thing plus a check that
-the committed `templates/` and `docs/` are exactly what the current source
-produces.
+the documentation, verifies and tests. CI runs the same thing, then rebuilds and
+fails if the committed `templates/` and `docs/` differ from what the current
+source produces. That comparison uses `git status`, so a new artefact you forgot
+to `git add` is caught as well as a changed one. `docs/images/` is exempt: the
+contact sheet's labels come from Pillow's bundled font, which changes between
+releases.
+
+CI pins the renderers in `constraints-ci.txt`, because a byte-for-byte gate is
+only meaningful if cairo, Pillow and pikepdf are held still. Bump those pins in
+their own commit, together with the regenerated output.
 
 Coding agents: see [AGENTS.md](AGENTS.md).
 
 ## Changing a dimension
 
 Each family's specs are the single source of truth — for basketball,
-`src/families/basketball/specs.py`. Change a value there and run `just all`.
+`src/rmtpl/families/basketball/specs.py`. Change a value there and run `just all`.
 `docs/families/basketball-court-geometry.md` is generated, so never edit it by
 hand; it would only drift away from what the courts are drawn with.
 
@@ -31,12 +38,12 @@ A dimension change needs three things:
 
 ## Adding a family
 
-A family is one package under `src/families/` that exposes a module-level
+A family is one package under `src/rmtpl/families/` that exposes a module-level
 `FAMILY`. The build, the manifest, the documentation and the checks all iterate
 over whatever the registry finds, so nothing else needs to change.
 
 ```python
-# src/families/planner/__init__.py
+# src/rmtpl/families/planner/__init__.py
 from rmtpl.family import BuildOptions, BuiltTemplate, TemplateFamily
 
 class PlannerFamily(TemplateFamily):

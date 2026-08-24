@@ -41,7 +41,14 @@ def to_path(published: float, edge: Edge, line_width: float) -> float:
 
 def court_fit(spec: CourtSpec, region: Region, page: tuple[int, int],
               style: Style = DEFAULT_STYLE) -> Fit:
-    """Fit the whole drawn region inside the page. Nothing is ever cropped."""
+    """Fit the whole drawn region inside the page. Nothing is ever cropped.
+
+    The box is the playing surface plus its boundary lines. Markings a rule
+    book puts *outside* the sidelines — FIBA's throw-in lines, for one — are
+    drawn into the margin rather than shrinking the court to accommodate them,
+    which is where they sit on a real floor. The margin is generous enough that
+    they never reach the page edge, and the raster check confirms it.
+    """
     if region not in REGIONS:
         raise ValueError(f"region must be one of {REGIONS}, not {region!r}")
     bw, lw = spec.boundary_line_width, spec.line_width
@@ -108,7 +115,7 @@ def _end(c: Canvas, s: CourtSpec, flip: bool) -> None:
     for mx, my, mlen, perpendicular in s.floor_marks:
         for sign in (-1, 1):
             if perpendicular:
-                c.line(sign * mx, Y(0), sign * mx, Y(mlen), lw,
+                c.line(sign * mx, Y(my), sign * mx, Y(my + mlen), lw,
                        colour=c.style.ink_soft)
             else:
                 c.line(sign * mx, Y(my), sign * (mx + mlen), Y(my), lw,

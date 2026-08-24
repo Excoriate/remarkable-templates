@@ -1,9 +1,15 @@
 """Find the template families available in this checkout.
 
-Discovery is by directory: every package under ``src/families/`` that exposes a
-module-level ``FAMILY`` is registered, in name order so builds are
+Discovery is by directory: every package under ``rmtpl/families/`` that exposes
+a module-level ``FAMILY`` is registered, in name order so builds are
 reproducible. There is no plugin manifest to keep in sync and no list of
 families to forget to update.
+
+The families live *inside* ``rmtpl`` rather than beside it. A top-level package
+called ``families`` would squat a generic name in every environment that
+installs this, and — because ``python -m`` puts the working directory first on
+``sys.path`` — any stray ``./families/`` would shadow it and be imported and
+executed. Namespacing the sub-package removes both.
 """
 
 from __future__ import annotations
@@ -13,7 +19,7 @@ import pkgutil
 
 from .family import TemplateFamily
 
-_PACKAGE = "families"
+_PACKAGE = "rmtpl.families"
 _cache: dict[str, TemplateFamily] | None = None
 
 

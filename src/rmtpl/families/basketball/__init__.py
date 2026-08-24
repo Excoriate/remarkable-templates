@@ -44,6 +44,11 @@ class BasketballFamily(TemplateFamily):
     def variants(self) -> tuple[str, ...]:
         return specs.ORDER
 
+    def expected_stems(self, options: BuildOptions) -> tuple[str, ...]:
+        rulesets = options.variants or specs.ORDER
+        return tuple(f"{key}-{region}-court"
+                     for key in rulesets for region in LAYOUTS)
+
     def build(self, out_dir: Path, device: Device,
               options: BuildOptions) -> list[BuiltTemplate]:
         rulesets = options.variants or specs.ORDER
@@ -81,8 +86,9 @@ class BasketballFamily(TemplateFamily):
     def write_docs(self, docs_dir: Path) -> list[Path]:
         return [write_geometry_doc(docs_dir)]
 
-    def verify(self, report, out_dir: Path, device: Device) -> None:
-        _checks.verify(report, out_dir, device)
+    def verify(self, report, out_dir: Path, device: Device,
+               record: dict | None = None) -> None:
+        _checks.verify(report, out_dir, device, record or {})
 
 
 FAMILY = BasketballFamily()

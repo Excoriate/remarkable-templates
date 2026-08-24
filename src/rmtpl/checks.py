@@ -68,7 +68,8 @@ class Report:
 
 def dark_mask(path: Path, threshold: int = 200) -> np.ndarray:
     """Boolean array of painted pixels, indexed ``[y, x]``."""
-    return np.array(Image.open(path).convert("L")) < threshold
+    with Image.open(path) as img:
+        return np.array(img.convert("L")) < threshold
 
 
 def runs(mask: np.ndarray) -> list[tuple[int, int]]:
@@ -89,6 +90,26 @@ def runs(mask: np.ndarray) -> list[tuple[int, int]]:
 def centres(profile: np.ndarray, span: int, coverage: float) -> list[float]:
     """Centres of runs where at least ``coverage`` of the other axis is dark."""
     return [(a + b) / 2.0 for a, b in runs(profile > span * coverage)]
+
+
+def band_ink(dark: np.ndarray, *, left: int = 0, right: int = 0,
+            top: int = 0, bottom: int = 0) -> int:
+    """Painted pixels inside the named edge bands. Zero means clear.
+
+    Used to check that a template leaves the tablet's toolbar strip alone —
+    a design claim that is worth verifying rather than asserting.
+    """
+    h, w = dark.shape
+    total = 0
+    if left:
+        total += int(dark[:, :left].sum())
+    if right:
+        total += int(dark[:, max(0, w - right):].sum())
+    if top:
+        total += int(dark[:top, :].sum())
+    if bottom:
+        total += int(dark[max(0, h - bottom):, :].sum())
+    return total
 
 
 def arc_ink(dark: np.ndarray, cx: float, cy: float, r: float,
@@ -129,7 +150,8 @@ def _device_matching(size: tuple[int, int]) -> str | None:
 
 
 def check_raster(rep: Report, path: Path, canvas: tuple[int, int]) -> None:
-    img = Image.open(path)
+    with Image.open(path) as opened:
+        img = opened.copy()
     detail = f"got {img.size}, want {canvas}"
     if img.size != canvas and (other := _device_matching(img.size)):
         # A set built for one device and checked against another is the common
@@ -143,10 +165,24 @@ def check_raster(rep: Report, path: Path, canvas: tuple[int, int]) -> None:
     corners = [int(arr[0, 0]), int(arr[0, -1]), int(arr[-1, 0]), int(arr[-1, -1])]
     rep.check(all(c >= 250 for c in corners), f"{path.name}: white page",
               f"corner values {corners}")
+    # Ink touching the page border means something was drawn outside the fit
+    # box and got cut off at the edge. On a template that is a clipped marking,
+    # not a design choice.
+    border = min(int(arr[0].min()), int(arr[-1].min()),
+                 int(arr[:, 0].min()), int(arr[:, -1].min()))
+    rep.check(border >= 250, f"{path.name}: nothing runs off the page",
+              f"darkest border pixel is {border}; content is being clipped")
 
 
-def check_pdfs(rep: Report, pdf_dir: Path, device: Device) -> None:
-    """Every PDF page must be the panel's size, or the tablet rescales it."""
+def check_pdfs(rep: Report, pdf_dir: Path, device: Device,
+               orientation: dict[str, bool] | None = None) -> None:
+    """Every PDF page must be the panel's size, in the right orientation.
+
+    Orientation comes from the manifest, not from the PDF. Deriving it from the
+    file only ever asks "is this one of the two valid sizes", which a portrait
+    page saved under a landscape template's name passes.
+    """
+    known = orientation or {}
     for pdf in sorted(pdf_dir.glob("*.pdf")):
         try:
             sizes = pdf_pages(pdf)
@@ -155,12 +191,17 @@ def check_pdfs(rep: Report, pdf_dir: Path, device: Device) -> None:
             continue
         if not rep.check(bool(sizes), f"{pdf.name}: has pages"):
             continue
-        landscape = sizes[0][0] > sizes[0][1]
+        if pdf.stem in known:
+            landscape = known[pdf.stem]
+            label = f"{pdf.name}: pages match the template's orientation"
+        else:
+            # A bundle spans a whole set; its own shape is all there is to go on.
+            landscape = sizes[0][0] > sizes[0][1]
+            label = f"{pdf.name}: pages are the panel size"
         want = tuple(round(v, 2) for v in device.page_pt(landscape))
         ok = all(abs(a - b) <= 0.1
                  for s in sizes for a, b in zip(s, want, strict=True))
-        rep.check(ok, f"{pdf.name}: pages are the panel size",
-                  f"got {sorted(set(sizes))}, want {want}")
+        rep.check(ok, label, f"got {sorted(set(sizes))}, want {want}")
 
 
 def namespaces(root: Path) -> list[Path]:
@@ -173,7 +214,8 @@ def namespaces(root: Path) -> list[Path]:
 
 # --------------------------------------------------------------------------- #
 
-def run_checks(root: Path, device: Device, verbose: bool = True) -> int:
+def run_checks(root: Path, device: Device, verbose: bool = True,
+               allow_partial: bool = False) -> int:
     rep = Report(verbose)
 
     rep.section("built template sets")
@@ -193,6 +235,28 @@ def run_checks(root: Path, device: Device, verbose: bool = True) -> int:
         rep.check(not problems, f"{ns_dir.name}: manifest schema",
                   "; ".join(problems))
         all_entries.extend(data.get("templates", []))
+
+        # The build record says what this set was asked to be. Without it there
+        # is nothing to compare against, and a set with half its templates
+        # missing looks exactly like a small set.
+        record = data.get(manifest.META_KEY, {})
+        if rep.check(bool(record), f"{ns_dir.name}: has a build record",
+                     "rebuild it: an older build wrote no record"):
+            rep.check(record.get("device") == device.key,
+                      f"{ns_dir.name}: built for this device",
+                      f"built for {record.get('device')!r}, checking against "
+                      f"{device.key!r}")
+            present = {Path(t["filename"]).name for t in data.get("templates", [])}
+            missing = [s for s in record.get("expected", []) if s not in present]
+            complete = bool(record.get("complete", True))
+            label = f"{ns_dir.name}: every expected template is present"
+            if not complete:
+                label += " (set was built from a subset)"
+            if complete or not allow_partial:
+                rep.check(not missing, label, f"missing: {', '.join(missing)}")
+
+        orientation = {Path(t["filename"]).name: bool(t.get("landscape"))
+                       for t in data.get("templates", [])}
         for entry in data.get("templates", []):
             stem = Path(entry["filename"]).name
             rep.check(entry["filename"].split("/")[0] == ns_dir.name,
@@ -203,14 +267,23 @@ def run_checks(root: Path, device: Device, verbose: bool = True) -> int:
                          f"missing {png}"):
                 check_raster(rep, png,
                              device.canvas(bool(entry.get("landscape"))))
-        check_pdfs(rep, ns_dir / "pdf", device)
+        check_pdfs(rep, ns_dir / "pdf", device, orientation)
 
     dupes = [p for p in manifest.validate(all_entries) if p.startswith("duplicate")]
     rep.check(not dupes, "template names unique across sets", "; ".join(dupes))
 
     for family in registry.families().values():
         rep.section(f"{family.label}: family checks")
-        family.verify(rep, root / family.key, device)
+        ns_dir = root / family.key
+        record_path = ns_dir / manifest.MANIFEST_NAME
+        record = {}
+        if record_path.is_file():
+            try:
+                record = json.loads(record_path.read_text(encoding="utf-8")).get(
+                    manifest.META_KEY, {})
+            except json.JSONDecodeError:
+                record = {}
+        family.verify(rep, ns_dir, device, record)
 
     print()
     if rep.failures:

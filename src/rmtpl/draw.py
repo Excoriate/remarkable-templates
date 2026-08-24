@@ -39,6 +39,10 @@ def fit_box(span: float, depth: float, page: tuple[int, int],
     ``top_pad`` world units below the top of the drawn area, which lets a family
     put its origin on a feature — a court's end line, say — rather than on the
     bounding box.
+
+    The scale is uniform and the box is centred. A family that needs a
+    different placement — an edge-to-edge grid, a left-aligned stave — should
+    construct :class:`Fit` directly; it is a plain value.
     """
     page_w, page_h = page
     usable_w = page_w - 2 * style.margin_px
@@ -125,6 +129,21 @@ class Canvas:
             f'width="{b[0] - a[0]:.3f}" height="{b[1] - a[1]:.3f}" '
             f'fill="{colour or self.style.ink}" stroke="none"/>'
         )
+
+    def raw(self, svg: str) -> None:
+        """Append a prepared SVG fragment, already in page pixels.
+
+        The escape hatch for anything the primitives above do not cover — most
+        obviously text, which needs a font. Use ``fit.px()`` to place it.
+
+        A caution about text specifically: a ``<text>`` element rasterises
+        against whatever font the rendering machine has, so a build containing
+        one stops being byte-reproducible across environments and the CI gate
+        that compares committed output against a rebuild will fail on somebody
+        else's machine. A family that needs lettering should convert it to
+        paths at build time, or ship the glyphs it needs as path data.
+        """
+        self.parts.append(svg)
 
     def _dash(self, dash) -> str:
         if not dash:

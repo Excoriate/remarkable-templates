@@ -76,9 +76,30 @@ def test_slugify(raw, slug):
     assert raster.slugify(raw) == slug
 
 
-def test_titleise_keeps_acronyms():
-    assert raster.titleise("nba-portrait") == "NBA portrait"
-    assert raster.titleise("hs-landscape") == "High school landscape"
+def test_titleise_keeps_generic_acronyms_only():
+    """Subject vocabulary belongs to a family, not to the toolkit."""
+    assert raster.titleise("a4-grid") == "A4 grid"
+    assert raster.titleise("my-lined-page") == "My lined page"
+    assert raster.titleise("nba-portrait") == "Nba portrait"
+    extra = frozenset({"nba"})
+    assert raster.titleise("nba-portrait", extra) == "NBA portrait"
+
+
+def test_slugify_never_collapses_distinct_names_to_one_stem():
+    """Transliteration can erase a name entirely; two erased names must not
+    become the same file and silently overwrite each other."""
+    a, b = raster.slugify("日本語コート"), raster.slugify("Ελληνικά")
+    assert a != b
+    assert a.startswith("template-") and b.startswith("template-")
+    assert raster.slugify("") == "template"
+    assert raster.SAFE_STEM.match(a) and raster.SAFE_STEM.match(b)
+
+
+def test_unique_slugs_disambiguates_a_real_collision():
+    names = ["Court 1", "court-1", "COURT  1"]
+    stems = raster.unique_slugs(names)
+    assert len(set(stems)) == 3, stems
+    assert stems[0] == "court-1"
 
 
 def test_a_set_built_for_another_device_says_which_one(tmp_path):
@@ -90,6 +111,21 @@ def test_a_set_built_for_another_device_says_which_one(tmp_path):
     rep = Report(verbose=False)
     check_raster(rep, png, devices.RM2.portrait)
     assert any("reMarkable Paper Pro" in f for f in rep.failures)
+
+
+def test_band_ink_counts_only_the_named_edges():
+    import numpy as np
+
+    from rmtpl.checks import band_ink
+
+    dark = np.zeros((10, 10), dtype=bool)
+    assert band_ink(dark, left=3) == 0
+    dark[5, 1] = True                       # inside the left band
+    dark[5, 8] = True                       # outside it
+    assert band_ink(dark, left=3) == 1
+    assert band_ink(dark, right=3) == 1
+    assert band_ink(dark, left=3, right=3) == 2
+    assert band_ink(dark, top=1) == 0
 
 
 # --- manifest -------------------------------------------------------------- #
@@ -151,6 +187,20 @@ def test_validate_rejects_a_filename_with_an_extension():
         {"name": "X", "filename": "ns/x.png", "iconCode": "",
          "categories": ["C"]}])
     assert any("extension" in p for p in problems)
+
+
+def test_validate_rejects_two_entries_sharing_one_image():
+    """Two picker entries on one file is what a dropped source looks like."""
+    problems = manifest.validate([
+        {"name": "A", "filename": "ns/x", "iconCode": "i", "categories": ["C"]},
+        {"name": "B", "filename": "ns/x", "iconCode": "i", "categories": ["C"]}])
+    assert any("duplicate filename" in p for p in problems)
+
+
+def test_entries_for_refuses_a_stem_collision():
+    with pytest.raises(ValueError, match="share a file stem"):
+        manifest.entries_for("ns", [_built("x"), _built("x")],
+                             categories=["C"])
 
 
 def test_validate_rejects_a_multi_character_icon():

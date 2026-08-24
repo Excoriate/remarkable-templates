@@ -32,6 +32,13 @@ from .family import BuiltTemplate
 #: Written next to a built set's ``png/``, ``svg/`` and ``pdf/`` directories.
 MANIFEST_NAME = "manifest.json"
 
+#: Key holding this toolkit's own build record. It sits beside ``templates`` in
+#: a built set's manifest and is never uploaded: the installer reads only the
+#: ``templates`` array. Recording what was asked for is what lets verification
+#: notice a template that is missing rather than one that is wrong, and what
+#: device a set was built for rather than guessing from a raster size.
+META_KEY = "rmtpl"
+
 
 @dataclass
 class TemplateEntry:
@@ -63,6 +70,12 @@ def entries_for(namespace: str, built: Sequence[BuiltTemplate], *,
     Icons cycle per orientation so a picker full of portrait templates does not
     show the same glyph six times while the landscape ones go unused.
     """
+    stems = [item.stem for item in built]
+    if len(set(stems)) != len(stems):
+        clashes = sorted({s for s in stems if stems.count(s) > 1})
+        raise ValueError(
+            f"{namespace}: two templates share a file stem {clashes}; one "
+            f"would overwrite the other")
     counter = {False: 0, True: 0}
     out: list[TemplateEntry] = []
     for item in built:
@@ -83,9 +96,40 @@ def dumps(entries: Iterable[TemplateEntry]) -> str:
     return json.dumps(payload, indent=2, ensure_ascii=True) + "\n"
 
 
-def write(path: Path, entries: Iterable[TemplateEntry]) -> Path:
+def build_record(*, namespace: str, device_key: str,
+                 expected: Sequence[str] = (), complete: bool = True,
+                 margin_px: float | None = None) -> dict[str, Any]:
+    """The ``rmtpl`` block for a built set.
+
+    Deliberately free of timestamps: builds are byte-reproducible, and a clock
+    would end that. ``margin_px`` is recorded because it is the one style input
+    that changes where things land, which lets verification recompute the page
+    fit from published dimensions instead of taking the drawing's word for it.
+    """
+    record: dict[str, Any] = {
+        "namespace": namespace,
+        "device": device_key,
+        "expected": list(expected),
+        "complete": complete,
+    }
+    if margin_px is not None:
+        record["margin_px"] = margin_px
+    return record
+
+
+def dumps_set(entries: Iterable[TemplateEntry],
+              record: dict[str, Any] | None = None) -> str:
+    payload: dict[str, Any] = {}
+    if record is not None:
+        payload[META_KEY] = record
+    payload["templates"] = [e.to_dict() for e in entries]
+    return json.dumps(payload, indent=2, ensure_ascii=True) + "\n"
+
+
+def write(path: Path, entries: Iterable[TemplateEntry],
+          record: dict[str, Any] | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(dumps(entries), encoding="utf-8")
+    path.write_text(dumps_set(entries, record), encoding="utf-8")
     return path
 
 
@@ -130,6 +174,7 @@ def validate(entries: list[dict[str, Any]]) -> list[str]:
     """Structural checks. Returns a list of problems; empty means good."""
     problems: list[str] = []
     names: dict[str, int] = {}
+    files: dict[str, int] = {}
     for i, t in enumerate(entries):
         where = f"entry {i}"
         for key in ("name", "filename", "iconCode"):
@@ -151,7 +196,16 @@ def validate(entries: list[dict[str, Any]]) -> list[str]:
                 f"(got {t.get('filename')!r})")
         name = str(t.get("name", ""))
         names[name] = names.get(name, 0) + 1
+        filename = str(t.get("filename", ""))
+        files[filename] = files.get(filename, 0) + 1
     for name, count in names.items():
         if count > 1:
             problems.append(f"duplicate template name {name!r} ({count} entries)")
+    for filename, count in files.items():
+        # Two entries pointing at one image is how a silently dropped source
+        # file looks from here: the count is right, the artwork is not.
+        if count > 1:
+            problems.append(
+                f"duplicate filename {filename!r} ({count} entries point at "
+                f"the same image)")
     return problems

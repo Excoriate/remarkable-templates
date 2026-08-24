@@ -9,6 +9,7 @@ aspect ratio does not match the screen.
 
 from __future__ import annotations
 
+import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -34,23 +35,64 @@ class Ingested:
     letterboxed: bool
 
 
+#: Stems are restricted to this so they are safe as a filename, as a JSON
+#: value, and as a word in a remote shell command during install.
+SAFE_STEM = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
 def slugify(name: str) -> str:
-    """A filesystem- and JSON-safe stem, stable across platforms."""
+    """A filesystem- and JSON-safe stem, stable across platforms.
+
+    Transliteration to ASCII loses information, and a name written entirely in
+    a non-Latin script can lose all of it. Rather than collapse those to a
+    shared placeholder — which silently overwrites one template with another —
+    a stem that would otherwise be empty gets a short digest of the original,
+    so distinct inputs stay distinct.
+    """
     text = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
     text = re.sub(r"[^A-Za-z0-9]+", "-", text).strip("-").lower()
-    return re.sub(r"-{2,}", "-", text) or "template"
+    text = re.sub(r"-{2,}", "-", text)
+    if not text:
+        digest = hashlib.sha256(name.encode("utf-8")).hexdigest()[:8]
+        return f"template-{digest}" if name else "template"
+    return text
 
 
-def titleise(stem: str) -> str:
+def unique_slugs(names: list[str]) -> list[str]:
+    """Slugs for ``names``, disambiguated so no two collide.
+
+    Two different source files can slugify to the same stem — ``Court 1.png``
+    and ``court-1.png``, say. Without this, the second silently overwrites the
+    first and the manifest points two entries at one image.
+    """
+    out: list[str] = []
+    seen: dict[str, int] = {}
+    for name in names:
+        stem = slugify(name)
+        if stem in seen:
+            seen[stem] += 1
+            stem = f"{stem}-{seen[stem]}"
+        else:
+            seen[stem] = 1
+        out.append(stem)
+    return out
+
+
+#: Words the generic titler leaves in capitals. Deliberately generic: a
+#: subject's own vocabulary belongs to its family, not to the toolkit. Pass
+#: ``acronyms=`` to extend it for one call.
+DEFAULT_ACRONYMS = frozenset({"us", "uk", "eu", "a3", "a4", "a5", "pdf", "svg"})
+
+
+def titleise(stem: str, acronyms: frozenset[str] | None = None) -> str:
     """A human display name from a file stem, leaving known acronyms alone."""
-    words = re.split(r"[-_\s]+", stem)
-    acronyms = {"nba", "ncaa", "fiba", "nfhs", "hs", "wnba", "us", "uk", "a4"}
+    known = DEFAULT_ACRONYMS if acronyms is None else acronyms
     out = []
-    for i, w in enumerate(words):
+    for i, w in enumerate(re.split(r"[-_\s]+", stem)):
         if not w:
             continue
-        if w.lower() in acronyms:
-            out.append(w.upper() if w.lower() != "hs" else "High school")
+        if w.lower() in known:
+            out.append(w.upper())
         elif i == 0:
             out.append(w.capitalize())
         else:
@@ -70,7 +112,8 @@ def normalise(src: Path, out: Path, device: Device, *, landscape: bool | None = 
     if mode not in FIT_MODES:
         raise SystemExit(f"fit mode must be one of {FIT_MODES}, not {mode!r}")
 
-    img = Image.open(src)
+    with Image.open(src) as opened:
+        img = opened.copy()
     src_size = img.size
     if landscape is None:
         landscape = src_size[0] > src_size[1]

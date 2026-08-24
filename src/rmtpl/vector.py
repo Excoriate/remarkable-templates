@@ -46,7 +46,8 @@ def svg_to_png(svg: str, out: Path, size: tuple[int, int],
         output_height=height,
         background_color="white",
     )
-    img = Image.open(io.BytesIO(raw)).convert("L" if greyscale else "RGB")
+    with Image.open(io.BytesIO(raw)) as opened:
+        img = opened.convert("L" if greyscale else "RGB")
     if img.size != (width, height):  # pragma: no cover - cairosvg is exact
         img = img.resize((width, height), Image.LANCZOS)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -67,7 +68,10 @@ def png_to_pdf(pngs: list[Path], out: Path, page_pt: tuple[float, float]) -> Pat
     if not pngs:
         raise ValueError("no pages to write")
     w_pt, h_pt = page_pt
-    pages = [Image.open(p).convert("RGB") for p in pngs]
+    pages = []
+    for p in pngs:
+        with Image.open(p) as opened:
+            pages.append(opened.convert("RGB"))
     first, rest = pages[0], pages[1:]
     dpi = min(first.size[0] / (w_pt / 72.0), first.size[1] / (h_pt / 72.0))
     buf = io.BytesIO()

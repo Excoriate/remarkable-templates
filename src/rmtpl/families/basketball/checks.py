@@ -23,8 +23,8 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from rmtpl.checks import Report, arc_ink, centres, dark_mask, runs
-from rmtpl.devices import Device
+from rmtpl.checks import Report, arc_ink, band_ink, centres, dark_mask, runs
+from rmtpl.devices import TOOLBAR_STRIP_PX, Device
 
 from . import specs
 from .specs import CourtSpec, Edge, inch, m
@@ -106,8 +106,13 @@ def _cross_checks(rep: Report) -> None:
         rep.check(s.three_radius >= s.three_corner_x,
                   f"{key}: three-point arc reaches its corner segments")
         if not s.three_corner_tangent_at_basket:
-            junction = s.basket_centre + math.sqrt(
-                s.three_radius ** 2 - s.three_corner_x ** 2)
+            # Guarded: the check above records the failure but does not stop,
+            # and a negative radicand here would end the run with a traceback
+            # instead of a report.
+            reach = s.three_radius ** 2 - s.three_corner_x ** 2
+            if reach < 0:
+                continue
+            junction = s.basket_centre + math.sqrt(reach)
             rep.check(0 < junction < s.half_length,
                       f"{key}: arc/corner junction lands on the floor",
                       f"{junction:.4f} ft")
@@ -117,8 +122,32 @@ def _cross_checks(rep: Report) -> None:
 # render checks
 # --------------------------------------------------------------------------- #
 
+#: Kept in step with rmtpl.style.Style.margin_px. Written out again rather
+#: than imported: this is the value the page fit is expected to have used, and
+#: a checker that imports it from the code under test cannot notice the code
+#: changing.
+DEFAULT_MARGIN_PX = 26.0
+
+
+def _expected_scale(spec: CourtSpec, region: str, canvas: tuple[int, int],
+                    margin_px: float) -> float:
+    """Device pixels per foot, recomputed from published dimensions.
+
+    Deliberately arithmetic written here rather than a call into the drawing
+    module. Deriving scale from the image — which the checks below do, so they
+    can talk in feet — verifies ratios only: a court drawn 6% small is
+    internally perfect and completely wrong. This is the check that notices.
+    """
+    bw, lw = spec.boundary_line_width, spec.line_width
+    span = spec.width + 2 * bw
+    depth = (spec.length + 2 * bw if region == "full"
+             else spec.half_length + bw + lw / 2.0)
+    page_w, page_h = canvas
+    return min((page_w - 2 * margin_px) / span, (page_h - 2 * margin_px) / depth)
+
+
 def _check_render(rep: Report, path: Path, spec: CourtSpec, region: str,
-                  device: Device) -> None:
+                  device: Device, margin_px: float = DEFAULT_MARGIN_PX) -> None:
     label = path.name
     dark = dark_mask(path)
     h, w = dark.shape
@@ -140,17 +169,26 @@ def _check_render(rep: Report, path: Path, spec: CourtSpec, region: str,
     scale = (right - left) / (spec.width + spec.boundary_line_width)
     ft = lambda px: px / scale                                    # noqa: E731
 
-    # Centring is a page-layout property, so it is checked in pixels, against
-    # arithmetic written here rather than imported.
+    # Centring and scale are page-layout properties, so both are checked in
+    # pixels against arithmetic written here rather than imported.
     rep.near((left + right) / 2.0, w / 2.0, f"{label}: court centred on page",
              tol=1.5, unit=" px")
+    want_scale = _expected_scale(spec, region, canvas, margin_px)
+    rep.near(scale, want_scale, f"{label}: drawn to the expected scale",
+             tol=0.05, unit=" px/ft")
+
+    # The drawn court must reach the margin on whichever axis binds, or it is
+    # not filling the page it was fitted to. Measured positions are painted
+    # line *centres*; the court's outer edge is half a boundary width beyond.
+    half_line = spec.boundary_line_width / 2.0 * scale
+    reached = min(left, w - right, horizontals[0], h - horizontals[-1]) - half_line
+    rep.check(reached <= margin_px + 1.5,
+              f"{label}: fills the page to the margin",
+              f"closest edge is {reached:.1f} px in, margin is {margin_px:.1f}")
 
     # The end line's painted centre sits half a boundary width outside the
     # floor, so the floor's origin is that much further into the page.
     origin = horizontals[0] + spec.boundary_line_width / 2.0 * scale
-
-    _near_ft(rep, ft(right - left) - spec.boundary_line_width, spec.width,
-             f"{label}: floor width")
 
     div = [r for r in horizontals if abs(ft(r - origin) - spec.half_length) < 1.5]
     if rep.check(bool(div), f"{label}: division line found"):
@@ -223,6 +261,12 @@ def _check_render(rep: Report, path: Path, spec: CourtSpec, region: str,
         rep.check(ink > 0.90, f"{label}: {end_name} restricted-area arc drawn",
                   f"only {ink:.0%} of the arc is painted")
 
+    # The toolbar strip. The design notes claim the court is inset far enough
+    # that the tool rail never lands on the paint; this is that claim, checked.
+    strip = band_ink(dark, left=TOOLBAR_STRIP_PX)
+    rep.check(strip == 0, f"{label}: toolbar strip is clear of ink",
+              f"{strip} painted pixels in the leftmost {TOOLBAR_STRIP_PX} px")
+
     # three-point apex on the court centre line
     col = dark[:, int(round(cx))]
     apex_ft = spec.basket_centre + spec.three_radius
@@ -237,13 +281,15 @@ def _check_render(rep: Report, path: Path, spec: CourtSpec, region: str,
                  apex_ft, f"{label}: three-point apex (outer edge) from end line")
 
 
-def verify(rep: Report, out_dir: Path, device: Device) -> None:
+def verify(rep: Report, out_dir: Path, device: Device,
+           record: dict | None = None) -> None:
     _cross_checks(rep)
+    margin = float((record or {}).get("margin_px", DEFAULT_MARGIN_PX))
     for key in specs.ORDER:
         for region in REGION_LANDSCAPE:
             png = out_dir / "png" / f"{key}-{region}-court.png"
             if png.exists():
-                _check_render(rep, png, specs.get(key), region, device)
+                _check_render(rep, png, specs.get(key), region, device, margin)
 
 
 __all__ = ["verify"]

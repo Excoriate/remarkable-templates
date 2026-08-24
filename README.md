@@ -40,13 +40,13 @@ the same as the ones committed here.
 
 ```
 src/rmtpl/        the toolkit — anything true of any reMarkable template
-src/families/     one package per template family
+src/rmtpl/families/  one package per template family
 templates/        built output, one directory per set
 install/          SSH install and uninstall
 docs/             user guide, format notes, generated references
 ```
 
-A family is one package under `src/families/` exposing a `FAMILY` object. The
+A family is one package under `src/rmtpl/families/` exposing a `FAMILY` object. The
 build, the manifest, the docs and the checks all iterate over whatever the
 registry finds, so adding one changes nothing else —
 see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -63,9 +63,11 @@ from.
 
 `just check` runs three kinds of verification: rule-book cross-checks that play
 independently published figures against each other, file-contract checks, and
-render checks that measure the finished PNGs back into feet without sharing any
-code with the drawing path. A test injects a three-inch error and asserts the
-checker notices, so the verification is known to be able to fail.
+render checks that measure the finished pixels. The render checks derive scale
+from the image, so those comparisons verify ratios; a separate check recomputes
+the expected scale from published dimensions to catch a drawing that is
+uniformly wrong. Three tests inject a defect and assert the checker fails, so
+the verification is known to be able to.
 
 ## Licence
 

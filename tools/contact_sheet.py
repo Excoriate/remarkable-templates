@@ -28,7 +28,8 @@ TEXT = (74, 74, 74)
 def sheet(files: list[Path], dest: Path) -> tuple[int, int]:
     tiles = []
     for f in files:
-        img = Image.open(f).convert("RGB")
+        with Image.open(f) as opened:
+            img = opened.convert("RGB")
         w = round(img.width * TILE_H / img.height)
         tiles.append((f.stem, img.resize((w, TILE_H), Image.LANCZOS)))
 

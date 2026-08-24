@@ -22,6 +22,9 @@ def _fmt(value: float, unit: str) -> str:
         return f"{value * M_PER_FT:.3f} m"
     feet = int(value)
     inches = (value - feet) * 12.0
+    if inches >= 11.995:            # would print 12"; carry into the foot
+        feet += 1
+        inches = 0.0
     exact = abs(inches - round(inches)) < 0.005
     if abs(inches) < 0.005:
         return f"{feet}'"
@@ -32,9 +35,9 @@ def _fmt(value: float, unit: str) -> str:
 def _rows(s: CourtSpec) -> list[tuple[str, str, str]]:
     u = s.native_unit
     f = lambda v: _fmt(v, u)                                   # noqa: E731
+    reach = s.three_radius ** 2 - s.three_corner_x ** 2
     junction = (s.basket_centre if s.three_corner_tangent_at_basket
-                else s.basket_centre + math.sqrt(
-                    s.three_radius ** 2 - s.three_corner_x ** 2))
+                else s.basket_centre + math.sqrt(max(reach, 0.0)))
     edge = lambda e: {  # noqa: E731
         Edge.OUTER: "outer edge",
         Edge.INNER: "inner edge",
@@ -86,7 +89,7 @@ def render() -> str:
     out: list[str] = [
         "# Court geometry",
         "",
-        "*Generated from `src/families/basketball/specs.py` by `just docs`. "
+        "*Generated from `src/rmtpl/families/basketball/specs.py` by `just docs`. "
         "Do not edit by hand: change the spec and regenerate, so the "
         "documentation and the drawings cannot disagree.*",
         "",

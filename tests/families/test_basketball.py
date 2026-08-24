@@ -11,8 +11,8 @@ import math
 
 import pytest
 
-from families.basketball import specs
-from families.basketball.specs import Edge, inch, m
+from rmtpl.families.basketball import specs
+from rmtpl.families.basketball.specs import Edge, inch, m
 
 FOOT_CODES = ("nba", "ncaa", "nfhs")
 
@@ -116,7 +116,7 @@ def test_every_spec_cites_its_sources():
 
 
 def test_edge_conventions_move_the_path_the_right_way():
-    from families.basketball.geometry import to_path
+    from rmtpl.families.basketball.geometry import to_path
     w = inch(2)
     assert to_path(10.0, Edge.OUTER, w) == pytest.approx(10.0 - w / 2)
     assert to_path(10.0, Edge.INNER, w) == pytest.approx(10.0 + w / 2)
@@ -124,7 +124,7 @@ def test_edge_conventions_move_the_path_the_right_way():
 
 
 def test_generated_docs_stay_in_step_with_the_specs(tmp_path):
-    from families.basketball.docgen import write_geometry_doc
+    from rmtpl.families.basketball.docgen import write_geometry_doc
     text = write_geometry_doc(tmp_path).read_text()
     for key in specs.ORDER:
         assert specs.get(key).label in text

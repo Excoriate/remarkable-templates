@@ -16,14 +16,20 @@ from rmtpl.vector import pdf_pages
 DEVICE = devices.PAPER_PRO
 
 
-def _build_all(root, want_pdf=True):
+def _build_all(root, want_pdf=True, options=None):
     made = {}
     for family in registry.families().values():
+        opts = options or BuildOptions(want_pdf=want_pdf)
         ns_dir = root / family.key
-        built = family.build(ns_dir, DEVICE, BuildOptions(want_pdf=want_pdf))
-        manifest.write(ns_dir / manifest.MANIFEST_NAME,
-                       manifest.entries_for(family.key, built,
-                                            categories=[family.category]))
+        built = family.build(ns_dir, DEVICE, opts)
+        manifest.write(
+            ns_dir / manifest.MANIFEST_NAME,
+            manifest.entries_for(family.key, built,
+                                 categories=[family.category]),
+            manifest.build_record(namespace=family.key, device_key=DEVICE.key,
+                                  expected=family.expected_stems(opts),
+                                  complete=not opts.variants,
+                                  margin_px=opts.style.margin_px))
         made[family.key] = built
     return made
 
@@ -94,7 +100,7 @@ def test_doctor_catches_a_broken_edge_convention(tmp_path, monkeypatch):
     edges into path centres, the set is rebuilt, and the checker is expected to
     notice. It measures pixels and compares against the rule book, so it does.
     """
-    import families.basketball.geometry as geometry
+    import rmtpl.families.basketball.geometry as geometry
 
     original = geometry.to_path
     monkeypatch.setattr(geometry, "to_path",
@@ -122,6 +128,63 @@ def test_builds_are_byte_reproducible(tmp_path):
             for p in (b.png, b.svg, b.pdf)
         })
     assert digests[0] == digests[1]
+
+
+def test_doctor_catches_a_template_that_was_never_built(tmp_path):
+    """A set with half of it missing must not look like a small set.
+
+    Verification that only inspects the files it finds cannot tell the
+    difference; the build record is what gives it something to compare against.
+    """
+    root = tmp_path / "short"
+    family = registry.get("basketball")
+    opts = BuildOptions(want_pdf=False)
+    built = family.build(root / family.key, DEVICE, opts)[:-2]
+    manifest.write(
+        root / family.key / manifest.MANIFEST_NAME,
+        manifest.entries_for(family.key, built, categories=[family.category]),
+        manifest.build_record(namespace=family.key, device_key=DEVICE.key,
+                              expected=family.expected_stems(opts),
+                              complete=True))
+    assert run_checks(root, DEVICE, verbose=False) == 1
+
+
+def test_doctor_catches_a_globally_wrong_scale(tmp_path):
+    """Render checks derive scale from the image so they can talk in feet.
+
+    That verifies ratios, and a court drawn uniformly small is internally
+    perfect. The absolute scale check is what notices, so it has to fail when
+    the drawing does not match the fit its own build record describes.
+    """
+    from rmtpl.style import Style
+
+    root = tmp_path / "small"
+    family = registry.get("basketball")
+    opts = BuildOptions(want_pdf=False, style=Style(margin_px=90))
+    built = family.build(root / family.key, DEVICE, opts)
+    manifest.write(
+        root / family.key / manifest.MANIFEST_NAME,
+        manifest.entries_for(family.key, built, categories=[family.category]),
+        # the record claims the default margin; the drawing used 90
+        manifest.build_record(namespace=family.key, device_key=DEVICE.key,
+                              expected=family.expected_stems(opts),
+                              margin_px=26.0))
+    assert run_checks(root, DEVICE, verbose=False) == 1
+
+
+def test_doctor_catches_a_pdf_in_the_wrong_orientation(tmp_path):
+    root = tmp_path / "rot"
+    _build_all(root)
+    pdf_dir = root / "basketball" / "pdf"
+    (pdf_dir / "nba-half-court.pdf").write_bytes(
+        (pdf_dir / "nba-full-court.pdf").read_bytes())
+    assert run_checks(root, DEVICE, verbose=False) == 1
+
+
+def test_doctor_catches_a_set_built_for_another_device(tmp_path):
+    root = tmp_path / "xdev"
+    _build_all(root, want_pdf=False)
+    assert run_checks(root, devices.RM2, verbose=False) == 1
 
 
 def test_a_family_can_be_built_alone(tmp_path):

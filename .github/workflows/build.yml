@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,12 +33,12 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev]" -c constraints-ci.txt
 
       - name: Lint
         run: |
           ruff check src tests tools install/lib
-          shellcheck -S warning install/*.sh
+          shellcheck -S warning install/*.sh scripts/*.sh
 
       - name: Tests
         run: pytest -q
@@ -55,11 +55,18 @@ jobs:
           python tools/contact_sheet.py templates docs/images
           python -m rmtpl doctor
 
+      # `git diff` cannot see a file that was never added, so a new family or
+      # variant whose artwork was forgotten would slip through. `git status`
+      # sees both. docs/images is excluded deliberately: the contact sheet
+      # renders its labels with Pillow's bundled bitmap font, which changes
+      # across releases, and its bytes carry no information anyone relies on.
       - name: Committed output is up to date
         run: |
-          if ! git diff --quiet -- templates docs; then
+          DRIFT=$(git status --porcelain -- templates docs ':!docs/images')
+          if [ -n "$DRIFT" ]; then
             echo "::error::templates/ or docs/ are stale. Run 'just all' and commit."
-            git --no-pager diff --stat -- templates docs
+            echo "$DRIFT"
+            git --no-pager diff -- templates docs ':!docs/images' | head -100
             exit 1
           fi
 

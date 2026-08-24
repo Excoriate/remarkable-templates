@@ -74,14 +74,39 @@ def cmd_build(args: argparse.Namespace) -> int:
         print("no families found in this checkout", file=sys.stderr)
         return 2
 
-    options = BuildOptions(
-        style=_style(args),
-        want_pdf=not args.no_pdf,
-        variants=tuple(v for v in args.variants.split(",") if v) if args.variants
-        else (),
-    )
+    wanted_variants = tuple(v for v in args.variants.split(",") if v)
+    extra = {}
+    for pair in args.set or []:
+        if "=" not in pair:
+            print(f"--set expects key=value, got {pair!r}", file=sys.stderr)
+            return 2
+        key, value = pair.split("=", 1)
+        extra[key.strip()] = value
+
     total = 0
     for family in selected:
+        # Variants belong to one family. Applying a selection meant for one to
+        # all of them is how `--variants nba` would silently build nothing for
+        # the next family somebody adds.
+        variants: tuple[str, ...] = ()
+        if wanted_variants:
+            unknown = [v for v in wanted_variants if v not in family.variants]
+            if len(unknown) == len(wanted_variants):
+                if len(selected) > 1:
+                    continue          # this selection is not for this family
+                print(f"{family.key} has no variants named "
+                      f"{', '.join(unknown)}; it has: "
+                      f"{', '.join(family.variants) or '(none)'}",
+                      file=sys.stderr)
+                return 2
+            if unknown:
+                print(f"{family.key}: unknown variant(s) {', '.join(unknown)}",
+                      file=sys.stderr)
+                return 2
+            variants = wanted_variants
+
+        options = BuildOptions(style=_style(args), want_pdf=not args.no_pdf,
+                               variants=variants, extra=extra)
         ns_dir = out / family.key
         if args.clean and ns_dir.exists():
             shutil.rmtree(ns_dir)
@@ -92,7 +117,12 @@ def cmd_build(args: argparse.Namespace) -> int:
                         else [family.category]),
             blank_icons=args.blank_icons,
         )
-        manifest.write(ns_dir / manifest.MANIFEST_NAME, entries)
+        expected = family.expected_stems(options)
+        manifest.write(
+            ns_dir / manifest.MANIFEST_NAME, entries,
+            manifest.build_record(
+                namespace=family.key, device_key=device.key, expected=expected,
+                complete=not variants, margin_px=options.style.margin_px))
         print(f"{family.label} -> {ns_dir}")
         for item in built:
             w, h = item.canvas
@@ -113,6 +143,13 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         print(f"namespace {args.namespace!r} belongs to a built-in family; "
               f"choose another with --namespace", file=sys.stderr)
         return 2
+    if not raster.SAFE_STEM.match(args.namespace):
+        # The namespace becomes a directory name, a JSON value, and a word in a
+        # command run over SSH on the tablet. Keep it boring.
+        print(f"namespace {args.namespace!r} must be lower-case letters, "
+              f"digits and hyphens, starting with a letter or digit",
+              file=sys.stderr)
+        return 2
 
     ns_dir = Path(args.out) / args.namespace
     pngs = sorted(p for p in src.iterdir()
@@ -122,31 +159,45 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         return 2
 
     from .family import BuiltTemplate
-    built: list[BuiltTemplate] = []
-    results = []
+
+    labels = []
     for png in pngs:
         label = png.stem
         if args.strip and label.lower().startswith(args.strip.lower()):
             label = label[len(args.strip):]
-        stem = raster.slugify(label)
+        labels.append(label)
+    # Disambiguated together, so two sources that would slugify alike cannot
+    # overwrite each other and leave the manifest pointing twice at one image.
+    stems = raster.unique_slugs(labels)
+    acronyms = frozenset(
+        a.strip().lower() for a in args.acronyms.split(",") if a.strip())
+
+    built: list[BuiltTemplate] = []
+    results = []
+    for png, label, stem in zip(pngs, labels, stems, strict=True):
         res = raster.normalise(png, ns_dir / "png" / f"{stem}.png", device,
                                mode=args.fit)
         results.append(res)
         built.append(BuiltTemplate(
-            stem=stem, display=raster.titleise(label), landscape=res.landscape,
-            canvas=res.out_size, png=res.out,
+            stem=stem,
+            display=raster.titleise(label, acronyms or None),
+            landscape=res.landscape, canvas=res.out_size, png=res.out,
         ))
         flag = "  LETTERBOXED" if res.letterboxed else ""
+        renamed = "" if stem == raster.slugify(label) else f"  -> {stem}"
         print(f"  {png.name:<34} {res.src_size[0]}x{res.src_size[1]}"
               f" -> {res.out_size[0]}x{res.out_size[1]}"
-              f"  x{res.scale:.4f}{flag}")
+              f"  x{res.scale:.4f}{flag}{renamed}")
 
     entries = manifest.entries_for(
         args.namespace, built,
         categories=(args.categories.split(",") if args.categories
                     else [args.namespace.title()]),
         name_prefix=args.prefix, blank_icons=args.blank_icons)
-    manifest.write(ns_dir / manifest.MANIFEST_NAME, entries)
+    manifest.write(
+        ns_dir / manifest.MANIFEST_NAME, entries,
+        manifest.build_record(namespace=args.namespace, device_key=device.key,
+                              expected=[b.stem for b in built]))
 
     if not args.no_pdf:
         for item in built:
@@ -174,9 +225,13 @@ def cmd_bundle(args: argparse.Namespace) -> int:
     made = []
     for ns_dir in sets:
         pngs = sorted((ns_dir / "png").glob("*.png"))
+        sizes = {}
+        for png in pngs:
+            with Image.open(png) as img:
+                sizes[png] = img.size
         for landscape, label in ((False, "portrait"), (True, "landscape")):
             canvas = device.canvas(landscape)
-            pages = [p for p in pngs if Image.open(p).size == canvas]
+            pages = [p for p in pngs if sizes[p] == canvas]
             pages = [p for p in pages for _ in range(args.copies)]
             if not pages:
                 continue
@@ -186,6 +241,36 @@ def cmd_bundle(args: argparse.Namespace) -> int:
     for target, n in made:
         print(f"  {_short(target)}  {n} page(s)")
     return 0 if made else 2
+
+
+def cmd_clean(args: argparse.Namespace) -> int:
+    """Remove build output, without trusting a shell glob to do it.
+
+    `just` interpolates recipe variables unquoted, so a shell `rm -rf` over an
+    interpolated path splits on spaces and deletes the wrong thing. Deletion
+    happens here instead, where a path is one value: only the known output
+    directories of a directory that already holds a manifest are removed, and
+    nothing outside the build root is touched.
+    """
+    out = Path(args.out).resolve()
+    if not out.is_dir():
+        print(f"nothing to clean: {out} is not a directory")
+        return 0
+    removed = []
+    for ns_dir in namespaces(out):
+        for sub in ("png", "svg", "pdf"):
+            target = ns_dir / sub
+            if target.is_dir() and not target.is_symlink():
+                shutil.rmtree(target)
+                removed.append(target)
+        record = ns_dir / manifest.MANIFEST_NAME
+        if record.is_file():
+            record.unlink()
+            removed.append(record)
+    for path in removed:
+        print(f"  removed {_short(path)}")
+    print(f"cleaned {len(removed)} path(s) under {_short(out)}")
+    return 0
 
 
 def cmd_docs(args: argparse.Namespace) -> int:
@@ -202,7 +287,7 @@ def cmd_docs(args: argparse.Namespace) -> int:
 
 def cmd_doctor(args: argparse.Namespace) -> int:
     return run_checks(Path(args.out), devices.get(args.device),
-                      verbose=not args.quiet)
+                      verbose=not args.quiet, allow_partial=args.allow_partial)
 
 
 # --------------------------------------------------------------------------- #
@@ -234,6 +319,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="comma separated subset of a family's own variants")
     p.add_argument("--categories", default="",
                    help="template-picker tabs; default is the family's own")
+    p.add_argument("--set", action="append", metavar="KEY=VALUE",
+                   help="family-specific setting; repeatable")
     p.add_argument("--blank-icons", action="store_true")
     p.add_argument("--no-pdf", action="store_true")
     p.add_argument("--clean", action="store_true")
@@ -247,6 +334,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="drop this leading text from each file stem")
     p.add_argument("--categories", default="")
     p.add_argument("--fit", default="fit", choices=raster.FIT_MODES)
+    p.add_argument("--acronyms", default="",
+                   help="comma separated words to keep capitalised in names")
     p.add_argument("--blank-icons", action="store_true")
     p.add_argument("--no-pdf", action="store_true")
     p.set_defaults(func=cmd_ingest)
@@ -263,7 +352,12 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("doctor", help="verify built artefacts")
     p.add_argument("--quiet", action="store_true")
+    p.add_argument("--allow-partial", action="store_true",
+                   help="do not fail on a set that was built from a subset")
     p.set_defaults(func=cmd_doctor)
+
+    p = sub.add_parser("clean", help="remove build output")
+    p.set_defaults(func=cmd_clean)
 
     args = ap.parse_args(argv)
     return args.func(args)

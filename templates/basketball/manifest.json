@@ -1,4 +1,20 @@
 {
+  "rmtpl": {
+    "namespace": "basketball",
+    "device": "rmpp",
+    "expected": [
+      "nba-full-court",
+      "nba-half-court",
+      "ncaa-full-court",
+      "ncaa-half-court",
+      "fiba-full-court",
+      "fiba-half-court",
+      "nfhs-full-court",
+      "nfhs-half-court"
+    ],
+    "complete": true,
+    "margin_px": 26.0
+  },
   "templates": [
     {
       "name": "NBA full court",

@@ -115,5 +115,9 @@ install rebuilds everything from this repository regardless.
   not. The merge preserves anything it does not recognise, so this is defensive
   rather than answered.
 - The exact width of the toolbar strip on a Paper Pro. 104 px is the figure
-  reported for firmware 3.5 on an rM2 and is used here as advisory: it is why
-  the templates keep a margin, not a number anything depends on.
+  reported for firmware 3.5 on an rM2. `rmtpl.devices.TOOLBAR_STRIP_PX` holds
+  it, and the basketball family's checks assert that no ink falls in that band
+  — so the claim "the tool rail never lands on the paint" is verified against
+  the number, even though the number itself is inherited rather than measured
+  here. It holds with room to spare: a court is always fitted by its long axis,
+  which leaves 144–247 px clear on each side depending on the rule set.

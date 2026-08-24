@@ -10,7 +10,9 @@ back keeps the risky part on a machine with real tooling.
 
 Entries already filed under a manifest's namespace directory are replaced, so
 running an install twice is the same as running it once. Everything else in the
-device's file is preserved, in order.
+device's file is preserved, in order — and that is asserted rather than assumed:
+the count of entries belonging to nobody but the device must come out of the
+merge exactly as it went in.
 """
 
 from __future__ import annotations
@@ -24,6 +26,12 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "src"))
 
 from rmtpl import manifest  # noqa: E402
+
+
+def foreign(entries: list[dict], namespaces: set[str]) -> list[dict]:
+    """Entries that belong to the device rather than to any of our sets."""
+    return [t for t in entries
+            if str(t.get("filename", "")).split("/")[0] not in namespaces]
 
 
 def main() -> int:
@@ -44,37 +52,47 @@ def main() -> int:
         data = json.loads(frag.read_text(encoding="utf-8"))
         problems = manifest.validate(data["templates"])
         if problems:
-            print(f"{frag}: refusing to install, fragment is invalid:",
+            print(f"{frag}: refusing to install, manifest is invalid:",
                   file=sys.stderr)
             for p in problems:
                 print(f"  - {p}", file=sys.stderr)
             return 1
         for t in data["templates"]:
-            ns = str(t["filename"]).split("/")[0]
-            namespaces.add(ns)
+            namespaces.add(str(t["filename"]).split("/")[0])
             entries.append(manifest.TemplateEntry(
                 name=t["name"], filename=t["filename"], icon_code=t["iconCode"],
                 landscape=bool(t.get("landscape", False)),
                 categories=list(t["categories"]),
             ))
 
+    before_foreign = foreign(device["templates"], namespaces)
+
     merged = device
-    removed_total = 0
     for ns in sorted(namespaces):
-        merged, removed, _ = manifest.merge(
+        merged, _, _ = manifest.merge(
             merged, [] if args.remove_only else
             [e for e in entries if e.filename.startswith(f"{ns}/")], namespace=ns)
-        removed_total += removed
+
+    after_foreign = foreign(merged["templates"], namespaces)
+
+    # The guarantee this whole host-side merge exists to provide, checked
+    # rather than asserted in a comment: nothing the device owns may be lost,
+    # reordered or altered.
+    if after_foreign != before_foreign:
+        print(f"refusing to write: the device's own entries changed during the "
+              f"merge ({len(before_foreign)} before, {len(after_foreign)} "
+              f"after). Nothing has been uploaded.", file=sys.stderr)
+        lost = [t.get("name") for t in before_foreign if t not in after_foreign]
+        if lost:
+            print(f"  missing: {lost}", file=sys.stderr)
+        return 1
 
     args.out.write_text(
         json.dumps(merged, indent=4, ensure_ascii=True) + "\n", encoding="utf-8")
-    after = len(merged["templates"])
-    kept = before - removed_total
-    print(f"device had {before} entries; kept {kept}, replaced {removed_total}, "
-          f"wrote {after}")
-    if kept < before - removed_total:
-        print("refusing: entries outside our namespace went missing", file=sys.stderr)
-        return 1
+    ours = len(merged["templates"]) - len(after_foreign)
+    print(f"device had {before} entries; {len(after_foreign)} of them are the "
+          f"device's own and are unchanged; wrote {len(merged['templates'])} "
+          f"({ours} ours)")
     return 0
 
 

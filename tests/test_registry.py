@@ -11,7 +11,7 @@ from rmtpl.family import BuildOptions, TemplateFamily
 
 
 def test_at_least_one_family_is_discovered():
-    assert registry.keys(), "no families found under src/families"
+    assert registry.keys(), "no families found under src/rmtpl/families"
 
 
 def test_basketball_is_registered():
