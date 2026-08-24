@@ -119,10 +119,24 @@ def arc_ink(dark: np.ndarray, cx: float, cy: float, r: float,
 # contract checks
 # --------------------------------------------------------------------------- #
 
+def _device_matching(size: tuple[int, int]) -> str | None:
+    """Which known device profile, if any, this raster is the right size for."""
+    from .devices import DEVICES
+    for d in DEVICES.values():
+        if size in (d.portrait, d.landscape):
+            return d.label
+    return None
+
+
 def check_raster(rep: Report, path: Path, canvas: tuple[int, int]) -> None:
     img = Image.open(path)
-    rep.check(img.size == canvas, f"{path.name}: canvas size",
-              f"got {img.size}, want {canvas}")
+    detail = f"got {img.size}, want {canvas}"
+    if img.size != canvas and (other := _device_matching(img.size)):
+        # A set built for one device and checked against another is the common
+        # cause, and the fix is a rebuild rather than a hunt.
+        detail += (f" — this file is sized for {other}. Rebuild it for the "
+                   f"device you are checking against.")
+    rep.check(img.size == canvas, f"{path.name}: canvas size", detail)
     rep.check(img.mode in ("L", "RGB"), f"{path.name}: opaque raster",
               f"mode {img.mode} carries transparency")
     arr = np.array(img.convert("L"))

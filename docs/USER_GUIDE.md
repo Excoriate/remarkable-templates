@@ -92,7 +92,7 @@ Drag one into the reMarkable desktop or mobile app and it syncs as a notebook
 you write on top of.
 
 ```bash
-just bundle COPIES=10     # ten pages of each template, ready to fill
+just bundle 10     # ten pages of each template, ready to fill
 ```
 
 Pages are sized to the panel exactly — 509.34 × 679.13 pt at 229 PPI — so
@@ -215,6 +215,18 @@ RM_DEVICE=rmppm just build     # Paper Pro Move, 954x1696
 
 Everything downstream follows: canvases, PDF page sizes and the verification all
 read the device profile.
+
+One set per device, though — `templates/` holds files for whichever device last
+built them. Verification checks every set against the device you name, so a set
+left over from another device fails and says which one it was built for:
+
+```
+square.png: canvas size: got (1620, 2160), want (1404, 1872)
+  — this file is sized for reMarkable Paper Pro. Rebuild it for the device
+    you are checking against.
+```
+
+`just clean` then a rebuild clears it.
 
 ## Styling
 

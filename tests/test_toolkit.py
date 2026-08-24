@@ -81,6 +81,17 @@ def test_titleise_keeps_acronyms():
     assert raster.titleise("hs-landscape") == "High school landscape"
 
 
+def test_a_set_built_for_another_device_says_which_one(tmp_path):
+    """The common cause of a canvas mismatch is a leftover build. Name it."""
+    from rmtpl.checks import Report, check_raster
+
+    png = tmp_path / "leftover.png"
+    Image.new("L", devices.PAPER_PRO.portrait, 255).save(png)
+    rep = Report(verbose=False)
+    check_raster(rep, png, devices.RM2.portrait)
+    assert any("reMarkable Paper Pro" in f for f in rep.failures)
+
+
 # --- manifest -------------------------------------------------------------- #
 
 def _built(stem, landscape=False):
