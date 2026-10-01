@@ -7,7 +7,7 @@
 # request gets a red build caused by somebody else's release.
 #
 # Bump these deliberately, in their own commit, with the regenerated templates.
-cairosvg==2.9.0
+cairosvg==2.9.1
 cairocffi==1.7.1
 pillow==12.3.0
 pikepdf==10.12.0
